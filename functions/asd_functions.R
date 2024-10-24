@@ -1,45 +1,64 @@
-# functions which help compute absolute standardized differences (ASDs)
-  # sometimes referred to as a standardized mean difference (smd)
+## functions which help compute absolute standardized differences (ASDs)
+# sometimes referred to as a standardized mean difference (smd)
 
 # this is a wrapper function for stddiff from the stddiff package which allows
 # different ASD computations depending on a variable-type specified by meta-data
-  # the function takes as input
-  # indf - a data frame
-  # gcol - a column number for the binary grouping variable
-  # vcol - one or more column numbers of different types variables in the data
-  # met - a specification of the variable type (numeric type 1 or 2, TF, cat)
-  # weights = logical T/F
-      # if weights = FALSE the default functions from stddiff are used
-      # if weights = TRUE, the function uses a custom function wtd.stddiff.XXX
-        # this assumes that data contains a column name specified in use_weights that is used for weighting
-require(stddiff)
+# this serves as a helper function for the lar
+# the function takes as input
+# indf - a data frame
+# gcol - a column number for the binary grouping variable
+# vcol - one or more column numbers of different types variables in the data
+# met - a specification of the variable type (numeric type 1 or 2, TF, cat)
+# weights = logical T/F
+# if weights = FALSE the default functions from stddiff are used
+# if weights = TRUE, the function uses a custom function wtd.stddiff.XXX
+# this assumes that data contains a column name specified in use_weights that is used for weighting
 
-asd_helper <- function(indf,y,x,met="num", use_weights = FALSE, var = NULL){
+# indf = CovariatesInformation
+# y = indexGroup
+# x = indexCol
+# met = metadata[i]$type
+# use_weights = use_weights
+# var = metadata$var[1]
+
+# indf = CovariatesInformation
+# x = indexCol
+# y = indexGroup
+# met = metadata[i]$type
+# use_weights = use_weights
+# var = metadata$var[2]
+
+asd_helper <- function(indf,y,x,met="num", use_weights = FALSE, var = NULL,
+                       group_names = c("CONTROL","EXPOSED")){
+  
   if (met=="NUM1" | met=="NUM2") {
     if(use_weights == FALSE){
-    outdf <- stddiff.numeric(data = indf, gcol = y, vcol = x)
+      outdf <- stddiff.numeric(data = indf, gcol = y, vcol = x)
     }else{
       outdf <- wtd.stddiff.numeric(data = indf, gcol = y, vcol = x,
                                    var = var, group = "group",
-                                   use_weights = use_weights)
+                                   use_weights = use_weights,
+                                   group_names = group_names)
     }
   }
   if (met=="TF") {
     if(use_weights == FALSE){
-    outdf <- stddiff.binary(data = indf, gcol = y, vcol = x)
+      outdf <- stddiff.binary(data = indf, gcol = y, vcol = x)
     }else{
       outdf <- wtd.stddiff.binary(data = indf, gcol = y, vcol = x,
                                   var = var, group = "group",
-                                  use_weights = use_weights)
+                                  use_weights = use_weights,
+                                  group_names = group_names)
     }
   }
   if (met=="CAT") {
     if(use_weights == FALSE){
-    outdf <- stddiff.category(data = indf, gcol = y, vcol = x)
+      outdf <- stddiff.category(data = indf, gcol = y, vcol = x)
     }else{
       outdf <- wtd.stddiff.category(data = indf, gcol = y, vcol = x,
                                     var = var, group = "group",
-                                    use_weights = use_weights)
+                                    use_weights = use_weights,
+                                    group_names = group_names)
     }
   }
   return(outdf)
@@ -53,14 +72,15 @@ asd_helper <- function(indf,y,x,met="num", use_weights = FALSE, var = NULL){
 # referenceExtension ="1"
 # use_weights = use_weights
 compute_asd <- function(CovariatesInformation, # file of type M_StudyCohort_Covariates, binary categorical grouping variable named "group"
-                metadata, # Meta-data supplying variable name (var), type and expectedCat for categorical variables
-                referenceExtension = '', # optional, extension to name of output column
-                use_weights = FALSE){
-  lapply(names(CovariatesInformation),function(x) 
-    if(! ( is.integer(CovariatesInformation[,get(x)]) == TRUE | is.numeric(CovariatesInformation[,get(x)]) == TRUE) ){
-      CovariatesInformation[,eval(x) := as.character(get(x))]
-    }
-  )
+                        metadata, # Meta-data supplying variable name (var), type and expectedCat for categorical variables
+                        referenceExtension = '', # optional, extension to name of output column
+                        use_weights = FALSE,
+                        group_names = c("CONTROL","EXPOSED")){
+  # lapply(names(CovariatesInformation),function(x)
+  #   if(! ( is.integer(CovariatesInformation[,get(x)]) == TRUE | is.numeric(CovariatesInformation[,get(x)]) == TRUE) ){
+  #     CovariatesInformation[,eval(x) := as.character(get(x))]
+  #   }
+  # )
   
   CovariatesInformation <- as.data.frame(CovariatesInformation)
   smd <- as.numeric()
@@ -71,21 +91,20 @@ compute_asd <- function(CovariatesInformation, # file of type M_StudyCohort_Cova
       if (var %in% names(CovariatesInformation)){
         indexGroup <- grep("group", colnames(CovariatesInformation))
         indexCol <-  grep(paste0('\\b',var,'\\b'), colnames(CovariatesInformation))
-        
         # compute table of values to check type to use
         dim_tabvals <- dim(table(CovariatesInformation[,indexCol]))[1]
         if (dim_tabvals > 1){ # if only one value, SMD = 0
           if(dim_tabvals > 2){ # check if categorical/continuous variable has more than binary levels
             if (metadata[i]$type == "NUM1" | metadata[i]$type == "NUM2"){
-            smd <- rbind(smd,  c(var,metadata[i]$type, asd_helper(CovariatesInformation,indexGroup,indexCol,met = metadata[i]$type,
-                                                                  use_weights = use_weights, var = var)[1,7]))
-              }else{
-            smd <- rbind(smd, c(var,metadata[i]$type,asd_helper(CovariatesInformation,indexGroup,indexCol,met = metadata[i]$type,
-                                                                use_weights = use_weights, var = var)[1,5]))
-              }
+              smd <- rbind(smd,  c(var,metadata[i]$type, asd_helper(CovariatesInformation,indexGroup,indexCol,met = metadata[i]$type,
+                                                                    use_weights = use_weights, var = var,group_names)[1,7]))
+            }else{
+              smd <- rbind(smd, c(var,metadata[i]$type,asd_helper(CovariatesInformation,indexGroup,indexCol,met = metadata[i]$type,
+                                                                  use_weights = use_weights, var = var,group_names)[1,5]))
+            }
           }else{ # if only two levels, then calculate as binary
             smd <- rbind(smd, c(var,metadata[i]$type,asd_helper(CovariatesInformation,indexGroup,indexCol,met = "TF",
-                                                                use_weights = use_weights, var = var)[1,5]))
+                                                                use_weights = use_weights, var = var,group_names)[1,5]))
           }
           
         }else{# if no differing levels calculate as 0
@@ -113,26 +132,27 @@ compute_asd <- function(CovariatesInformation, # file of type M_StudyCohort_Cova
 # ------------------------------------------------------------------------------
 
 # here we define custom weighted versions of the stddiff functions
-# these are made to be very similar to the stdiff functions except they rely on 
+# these are made to be very similar to the stdiff functions except they rely on
 # Hmisc:: implementations of the weighted mean, weighted variance/sd and weighted cross-tables
 
 # functionality here is not particularly flexible, in that we assume:
-  # 1. the cohort dataset has groups EXPOSED and CONTROL
-  # 2. the weights are stored in a column called iptw
+# 1. the cohort dataset has groups EXPOSED and CONTROL
+# 2. the weights are stored in a column called iptw
 # Hmisc::wtd.var(temp[temp$group == "CONTROL",var], weights = temp[temp$group == "CONTROL", use_weights])
 # numeric weighted difference version
 wtd.stddiff.numeric <- function (data, gcol, vcol, var,
-                                 group = "group", use_weights) {
+                                 group = "group", use_weights,
+                                 group_names = c("CONTROL","EXPOSED")) {
   data[, gcol] <- as.factor(data[, gcol])
   rst <- matrix(rep(0, 9 * length(vcol)), ncol = 9)
-  dimnames(rst) <- list(names(data)[vcol], c("mean.c", "sd.c", 
-                                             "mean.t", "sd.t", "missing.c", "missing.t", "stddiff", 
+  dimnames(rst) <- list(names(data)[vcol], c("mean.c", "sd.c",
+                                             "mean.t", "sd.t", "missing.c", "missing.t", "stddiff",
                                              "stddiff.l", "stddiff.u"))
   for (i in 1:length(vcol)) {
     data[, vcol[i]] <- as.numeric(data[, vcol[i]])
-    na.c <- length(which(is.na(data[, vcol[i]][which(data[, 
+    na.c <- length(which(is.na(data[, vcol[i]][which(data[,
                                                           gcol] == levels(data[, gcol])[1])])))
-    na.t <- length(which(is.na(data[, vcol[i]][which(data[, 
+    na.t <- length(which(is.na(data[, vcol[i]][which(data[,
                                                           gcol] == levels(data[, gcol])[2])])))
     wcol <- which(colnames(data) == use_weights)[1]
     
@@ -140,27 +160,27 @@ wtd.stddiff.numeric <- function (data, gcol, vcol, var,
     temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
     
     # use weighted mean and weighted sd
-    m <- sapply(c("CONTROL","EXPOSED"), function(s) Hmisc::wtd.mean(temp[temp$group==s,var], 
-                                                           weights = temp[temp$group==s,use_weights]))
-    s <- suppressWarnings(sapply(c("CONTROL","EXPOSED"), function(s) sqrt(Hmisc::wtd.var(temp[temp$group==s,var], 
-                                                                weights = temp[temp$group==s,use_weights])))
+    m <- sapply(group_names, function(s) Hmisc::wtd.mean(temp[temp$group==s,var],
+                                                         weights = temp[temp$group==s,use_weights]))
+    s <- suppressWarnings(sapply(group_names, function(s) sqrt(Hmisc::wtd.var(temp[temp$group==s,var],
+                                                                              weights = temp[temp$group==s,use_weights])))
     )
     # edge case can occur where weighted sd is negative
-      # if this happens, try an alternative weighting method
+    # if this happens, try an alternative weighting method
     if(any(is.nan(s))){
       log_print(paste0("For variable ",var," negative weighted variance, switching method to ML"))
-      s <- sapply(c("CONTROL","EXPOSED"), function(s) sqrt(Hmisc::wtd.var(temp[temp$group==s,var], 
-                                                                          weights = temp[temp$group==s,use_weights],
-                                                                          method = "ML")))
+      s <- sapply(group_names, function(s) sqrt(Hmisc::wtd.var(temp[temp$group==s,var],
+                                                               weights = temp[temp$group==s,use_weights],
+                                                               method = "ML")))
     }
     
     stddiff <- abs(m[2] - m[1])/sqrt((s[2]^2 + s[1]^2)/2)
     n <- table(temp[, 1])
-    se <- sqrt((nrow(temp)/n[1]/n[2]) + stddiff^2/(2 * 
+    se <- sqrt((nrow(temp)/n[1]/n[2]) + stddiff^2/(2 *
                                                      nrow(temp)))
     stddiff.l <- stddiff - 1.96 * se
     stddiff.u <- stddiff + 1.96 * se
-    rst[i, ] <- c(m[1], s[1], m[2], s[2], na.c, 
+    rst[i, ] <- c(m[1], s[1], m[2], s[2], na.c,
                   na.t, stddiff, stddiff.l, stddiff.u)
   }
   return(rst)
@@ -170,12 +190,13 @@ wtd.stddiff.numeric <- function (data, gcol, vcol, var,
 
 # == for binary variables
 wtd.stddiff.binary <- function (data, gcol, vcol, var,
-                                group = "group", use_weights) {
+                                group = "group", use_weights,
+                                group_names = c("CONTROL","EXPOSED")) {
   for (i in 1:length(c(gcol, vcol))) {
     data[, c(gcol, vcol)[i]] <- as.factor(data[, c(gcol, vcol)[i]])
   }
   rst <- matrix(rep(0, 7 * length(vcol)), ncol = 7)
-  dimnames(rst) <- list(names(data)[vcol], c("p.c", "p.t", 
+  dimnames(rst) <- list(names(data)[vcol], c("p.c", "p.t",
                                              "missing.c", "missing.t", "stddiff", "stddiff.l", "stddiff.u"))
   for (i in 1:length(vcol)) {
     na.c <- length(which(is.na(data[, vcol[i]][which(data[, gcol] == levels(data[, gcol])[1])])))
@@ -186,7 +207,7 @@ wtd.stddiff.binary <- function (data, gcol, vcol, var,
     temp[, 2] <- as.numeric(temp[, 2])
     temp[, var] <- temp[, var] - 1
     # use weighted mean
-    p <- sapply(c("CONTROL","EXPOSED"), function(s) Hmisc::wtd.mean(temp[temp$group==s,var], 
+    p <- sapply(c("CONTROL","EXPOSED"), function(s) Hmisc::wtd.mean(temp[temp$group==s,var],
                                                                     weights = temp[temp$group==s,use_weights]))
     
     stddiff <- abs(p[2] - p[1])/sqrt((p[2] * (1 - p[2]) + p[1] * (1 - p[1]))/2)
@@ -202,11 +223,12 @@ wtd.stddiff.binary <- function (data, gcol, vcol, var,
 }
 
 # weighted categorical variable difference
-  # relies on weighted cross tables
+# relies on weighted cross tables
 # data = indf; gcol = y; vcol = 89
 # var
 wtd.stddiff.category <- function (data, gcol, vcol, var,
-                                  group = "group", use_weights) {
+                                  group = "group", use_weights,
+                                  group_names = c("CONTROL","EXPOSED")) {
   for (i in 1:length(c(gcol, vcol))) {
     data[, c(gcol, vcol)[i]] <- as.factor(data[, c(gcol, vcol)[i]])
   }
@@ -219,7 +241,7 @@ wtd.stddiff.category <- function (data, gcol, vcol, var,
   for (i in 1:length(nr)) {
     rname <- c(rname, paste(names(data)[vcol[i]], levels(data[, vcol[i]])))
   }
-  dimnames(rst) <- list(rname[-1], c("p.c", "p.t", "missing.c", 
+  dimnames(rst) <- list(rname[-1], c("p.c", "p.t", "missing.c",
                                      "missing.t", "stddiff", "stddiff.l", "stddiff.u"))
   
   for (i in 1:length(vcol)) {
@@ -228,13 +250,13 @@ wtd.stddiff.category <- function (data, gcol, vcol, var,
     wcol <- which(colnames(data) == use_weights)[1]
     temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
     
-    temp_exp <- temp[temp[, group] == "EXPOSED", ]
-    temp_con <- temp[temp[, group] == "CONTROL", ]
+    temp_exp <- temp[temp[, group] == group_names[2], ]
+    temp_con <- temp[temp[, group] == group_names[1], ]
     
-    tbl_exp <- as.data.frame(Hmisc::wtd.table(temp_exp[, var], w = temp_exp[, use_weights])) 
+    tbl_exp <- as.data.frame(Hmisc::wtd.table(temp_exp[, var], w = temp_exp[, use_weights]))
     tbl_con <- as.data.frame(Hmisc::wtd.table(temp_con[, var], w = temp_con[, use_weights]))
-    colnames(tbl_exp)[2] <- "EXPOSED"
-    colnames(tbl_con)[2] <- "CONTROL"
+    colnames(tbl_exp)[2] <- group_names[2]
+    colnames(tbl_con)[2] <- group_names[1]
     
     tbl <- merge(tbl_exp, by.x = "x", tbl_con, all.x = TRUE, all.y = TRUE, sort = TRUE)
     tbl[is.na(tbl)] <- 0
@@ -251,18 +273,18 @@ wtd.stddiff.category <- function (data, gcol, vcol, var,
     for (ii in 1:k) {
       for (j in 1:l) {
         if (ii == j) {
-          s[ii, j] <- 0.5 * (t[ii] * (1 - t[ii]) + c[ii] * 
+          s[ii, j] <- 0.5 * (t[ii] * (1 - t[ii]) + c[ii] *
                                (1 - c[ii]))
         }
         if (ii != j) {
-          s[ii, j] <- -0.5 * (t[ii] * t[j] + c[ii] * 
+          s[ii, j] <- -0.5 * (t[ii] * t[j] + c[ii] *
                                 c[j])
         }
       }
     }
     e <- rep(1, k)
     e <- diag(e)
-    s <- tryCatch(solve(s, e), error = function(err) -88) 
+    s <- tryCatch(solve(s, e), error = function(err) -88)
     
     if(-88 %in% s){
       rst[,] <- -88
@@ -276,14 +298,14 @@ wtd.stddiff.category <- function (data, gcol, vcol, var,
       stddiff.l <- stddiff - 1.96 * se
       stddiff.u <- stddiff + 1.96 * se
       if (i == 1) {
-        rst[1:nr[i], ] <- cbind(prop, c(na.c, rep(NA, k)), 
-                                c(na.t, rep(NA, k)), c(stddiff, rep(NA, k)), 
-                                c(stddiff.l, rep(NA, k)), c(stddiff.u, rep(NA, 
+        rst[1:nr[i], ] <- cbind(prop, c(na.c, rep(NA, k)),
+                                c(na.t, rep(NA, k)), c(stddiff, rep(NA, k)),
+                                c(stddiff.l, rep(NA, k)), c(stddiff.u, rep(NA,
                                                                            k)))
       }
       if (i > 1) {
-        rst[(sum(nr[1:(i - 1)]) + 1):(sum(nr[1:(i - 1)]) + nr[i]), ] <- cbind(prop, c(na.c, rep(NA, k)), 
-                                                                              c(na.t, rep(NA, k)), c(stddiff, rep(NA, k)), 
+        rst[(sum(nr[1:(i - 1)]) + 1):(sum(nr[1:(i - 1)]) + nr[i]), ] <- cbind(prop, c(na.c, rep(NA, k)),
+                                                                              c(na.t, rep(NA, k)), c(stddiff, rep(NA, k)),
                                                                               c(stddiff.l, rep(NA, k)), c(stddiff.u, rep(NA, k)))
       }
     }

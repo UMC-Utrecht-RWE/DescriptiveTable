@@ -63,15 +63,13 @@ tableout <- DescriptivesTable(popdf = popdf,# data object
                   control_types = FALSE, # FALSE keeps only the end-labels, TRUE also outputs var names etc.
                   missing_vars = ExpectedMissingVars,
                   missing_flag = -99, # flag numeric for missing variable
-                  round_decimals = 2)
+                  round_decimals = 2,
+                  use_weights = FALSE,
+                  output_asd = FALSE)
 
 # optional; re-arranging of columns to sensible order
 tableout[,c("label",paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"))]
-# for clarity, this is what V1-V3 represent
-setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
-                    c("N_exposed","perc_exposed","aux_exposed",
-                      "N_control","perc_control","aux_control")
-)
+
 
 # ----- basic post-processing -----
 
@@ -82,3 +80,11 @@ sapply(tableout$perc_control, function(s) round_to(s,2))
  # mask_to ; mask cell counts
 mask_count(tableout$N_control,5)
 
+# all together
+mask_round_descriptives(tableout)
+
+# # for clarity, this is what V1-V3 represent
+setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
+                    c("N_exposed","perc_exposed","aux_exposed",
+                      "N_control","perc_control","aux_control")
+)
