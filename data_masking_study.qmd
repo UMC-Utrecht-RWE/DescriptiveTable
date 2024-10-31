@@ -1,0 +1,183 @@
+---
+title: "Data Masking Function Requirements/Possibilities"
+author: "Carlos Poses"
+format: html
+editor: source
+---
+
+## Problem
+
+-   In tables that display the counts of categorical variables, we want to mask values for categories whose count is less than 5 (or some other threshold $T$).
+-   To implement this masking, we need to make sure the value of the masked is not computable from the other values and the totals.
+
+In the first section of the doc, I explain under which circumstances masking is not effective. Essentially this happens everytime that you can represent the masked values, the unmasked values and the total as an equation with one unique solution given the restrictions that all values are positive integers (Sounds mathier than it is). I also discuss situations where the're not unique solutions but actually the number of possible solutions is small (e.g., you mask two values by saying they're less than 5 but you give away the info that the values are either 2 or 1). I derive rules that (if they work) should be easy to implement with code to check when masking does and does not work.
+
+In the second section I propose two ways to adress the situation when masking does not work.
+
+### When masking does and does not work
+
+### Example
+
+```{r}
+cat_value <- c(3, 97, 100)
+total <- sum(cat_value)
+total
+```
+
+Masking the value 3 (e.g., substituting it by '<= 5') is not enough if we know the other values and the total: 200-97-100 = 3.
+
+### Formalizing the situation
+
+For each category, the problem can be represented with the equation:
+
+$$ x + y + ... + z = N$$
+
+where $x,y,...,z$ are known integers representing category counts and $N$ is the total.
+
+Say we have a thresold ($T$, e.g. 5), and we mask values lower than this threshold. We denote this masked values with superscript M (e.g., $x^M$).
+
+## When masking does not work
+
+1.  **Masking one value without masking the total (or another value) is equivalent to not masking.**
+
+$$ x + y  + ... + z = N$$ 
+
+If we mask one value ($x^M$), this turns into an linear equation with one unknown and thus an unique solution.
+
+$$ x^M = N - y - ... - z $$ 
+
+(This is the case represented by the first example)
+
+2. **Masking multiple values is equivalent to not masking in two scenarios** 
+
+In general an equation with two or more unknowns has no solution. But given the restrictions (all values are positive integers), there are two special cases where there's only one possible solution:
+
+2.1. When all masked values are one, because one can still work it out from the total.
+
+For instance, we mask two values. 
+
+$$ x^M + y^M  + ... + z = N$$ 
+
+If $x^M = y^M = 1$ then
+
+$$ x^M + y^M = N - ... - z == 2 $$ 
+
+Even if you don't know what the original $x^M$ and $y^M$ values are, if you know \$ N - ... - z $ and the number of masked values (\# M), the only solution is that all values are 1.
+This is general always the case when the result of substracing unmasked values from the total is equal to the number of masekd values.
+
+2.1. When all masked values are equal to the highest possible value.
+
+Say threshold is less or equal than 5.
+
+$$ x^M + y^M  + ... + z = N$$ 
+
+If $x^M = y^M = 5$ then
+
+$$ x^M + y^M = N - ... - z == 10 $$
+
+Again there's only one solution. So this is equivalent to masking.
+
+CONCLUSION: **In any other case, it is impossible to tell the exact values**
+
+NB: Honestly not 100% sure these are the two only cases with unique solution.
+Possible solution: Try to solve the system of equations with R and proper restrictions (positive integers). If there's unique solution, there's no masking.
+
+
+### Masking works but we still give away some info
+
+Despite the preivous conclusion, if we want masking to give no other information about a value that that values it is smaller than a threshold, we need something else.
+
+It's easier to think about this with an example directly.
+
+### Example
+
+```{r}
+cat_value <- c(2, 1, 97, 100) 
+total <- sum(cat_value)
+total
+```
+
+If our threshold is 5, we would mask the values 2 (let's call it $x^M$) and 1 (let's call it $y^M$). But then we know
+
+\$200 - 97 - 100 = 3 \$
+
+or
+
+$$ N - z - w = x^M + y^M$$ 
+
+Even though in the table we would say that the value for both x and y is $<5$, in this example you can tell that for x (or y) it is either 2 or 1. It's impossible to tell the exact value, because there's no unique solution. But we are giving some information about the likely values.
+
+#### When are we not implicitly releasing more info that 'the value is smaller than interval'?
+
+If there're two unknowns, every time this is satisfied:
+
+$$ N - w - ... z \geq T + 1 $$
+or, in general for every number of masked variables (# M):
+
+$$ N - w - ... z \geq T + \# M - 1 $$
+In words: if the difference between the totals and the unmasked categories is higher than the threshold + the number of masked values - 1, then:
+
+- For a specific masked value, nobody can tell if its value is smaller than 5.
+- But in many cases (e.g., when the exact equality holds), you know at least one value is smaller than five. You just don't know which one. Maybe this is enough.
+
+#### Example
+
+```{r}
+cat_value <- c(2, 4, 97, 100)
+total <- sum(cat_value)
+total
+```
+```{r}
+# we would mask 2 and 4, let's call them x and y
+total - 100 - 97
+```
+You know either x or y is not 5 (because both can't be 5. Actually both can't be 4, or one 5 and another 4, etc). But you are saying nothing about the values: x could be 5, 4, 3, 2 or 1. Same for y.
+
+You reveal some info: both masked are not close to the threshold. But you can't tell which one, and all values below the threshold are possible for both counts. 
+This is the info you are giving: *at least one of the values is not equal to 5 (or equal to T in general)*. But you can't tell for *any specific value* whether it is exactly equal to 5 or not. 
+
+This strategy might seem ok, but it scales a bit badly. Say you mask 6 values.
+```{r}
+cat_value <- c(2,1,1,2,3, 4, 97, 100)
+total <- sum(cat_value)
+total
+```
+```{r}
+total - 100 - 97
+```
+
+Here you know that the sum of the 6 masked values is 13. All values are 'well masked', i.e., you can't tell for any specific value whether it's 5,4,3,2, or 1. But you are giving away the info that most values are not 5, or 4, or 3. It can be a bit problematic in some edge cases (e.g. there are 10 masked values that add up to 14, you know many values are 1).
+
+If this is enough, one can just check this rule is satisfied.
+
+
+### When none of the above holds
+
+Recap: 
+
+1. If you can formulate the count as an equation of the form:
+$$ x^M + y^M  + ... + z = N$$ 
+
+with one unique solution for each unknown, then you are not properly masking.
+(Important: there can be as many masked variables (superscript M) and as many unmasked variables (no superscripts) as you want in the previous equation).
+
+2. If however there's not unique solution and you have this:
+
+$$ N - w - ... z \geq T + \# M - 1 $$ 
+then you can't tell if each value is 5, 4, 3, 2 or 1. But the closer the lhs is to the rhs, the more info you have about the possible values (i.e., you know some values are much smaller).s
+
+#### Solutions
+
+You can transform variables until conditions hold.
+
+- Instead of giving information about N, you can give it in a interval: [Nmin, Nmax]
+
+$$ N - z - 1 $$ 
+
+
+you also have this
+
+$$ N - w - ... z \geq x^M + ... + y^M $$
+
+
+

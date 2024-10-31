@@ -78,7 +78,7 @@ tableout[,c("label",paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"))]
 sapply(tableout$perc_control, function(s) round_to(s,2))
 
  # mask_to ; mask cell counts
-mask_count(tableout$N_control,5)
+mask_count(tableout$N_control,5) # There is no N control here?
 
 # all together
 mask_round_descriptives(tableout)
