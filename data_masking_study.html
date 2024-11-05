@@ -8,7 +8,7 @@
 
 <meta name="author" content="Carlos Poses">
 
-<title>Smart data Masking Function Requirements/Possibilities</title>
+<title>Smart data masking function Requirements/Possibilities</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -104,13 +104,37 @@ window.Quarto = {
 <body>
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="99">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#problem" id="toc-problem" class="nav-link active" data-scroll-target="#problem"><span class="header-section-number">1</span> Problem</a></li>
+  <li><a href="#requirement-1" id="toc-requirement-1" class="nav-link" data-scroll-target="#requirement-1"><span class="header-section-number">2</span> Requirement 1</a>
+  <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example"><span class="header-section-number">2.1</span> Example</a></li>
+  <li><a href="#expressing-the-problem-using-an-equation" id="toc-expressing-the-problem-using-an-equation" class="nav-link" data-scroll-target="#expressing-the-problem-using-an-equation"><span class="header-section-number">2.2</span> Expressing the problem using an equation</a></li>
+  <li><a href="#three-scenarios-where-requirement-1-is-not-satisfied" id="toc-three-scenarios-where-requirement-1-is-not-satisfied" class="nav-link" data-scroll-target="#three-scenarios-where-requirement-1-is-not-satisfied"><span class="header-section-number">2.3</span> Three scenarios where requirement 1 is not satisfied</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">2.4</span> Conclusion</a></li>
+  </ul></li>
+  <li><a href="#requirement-2-for-a-masked-value-it-is-impossible-to-tell-anything-from-the-value-other-than-it-is-less-than-the-threshold" id="toc-requirement-2-for-a-masked-value-it-is-impossible-to-tell-anything-from-the-value-other-than-it-is-less-than-the-threshold" class="nav-link" data-scroll-target="#requirement-2-for-a-masked-value-it-is-impossible-to-tell-anything-from-the-value-other-than-it-is-less-than-the-threshold"><span class="header-section-number">3</span> Requirement 2: For a masked value, it is impossible to tell anything from the value other than it is less than the threshold</a>
+  <ul class="collapse">
+  <li><a href="#problem-1" id="toc-problem-1" class="nav-link" data-scroll-target="#problem-1"><span class="header-section-number">3.1</span> Problem</a></li>
+  <li><a href="#three-scenarios" id="toc-three-scenarios" class="nav-link" data-scroll-target="#three-scenarios"><span class="header-section-number">3.2</span> Three scenarios</a></li>
+  <li><a href="#conclusion-1" id="toc-conclusion-1" class="nav-link" data-scroll-target="#conclusion-1"><span class="header-section-number">3.3</span> Conclusion</a></li>
+  </ul></li>
+  <li><a href="#recap-function-design-and-possible-solution" id="toc-recap-function-design-and-possible-solution" class="nav-link" data-scroll-target="#recap-function-design-and-possible-solution"><span class="header-section-number">4</span> Recap: Function design and possible solution</a>
+  <ul class="collapse">
+  <li><a href="#possible-solutions" id="toc-possible-solutions" class="nav-link" data-scroll-target="#possible-solutions"><span class="header-section-number">4.1</span> Possible solutions</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="data_masking_study.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li><li><a href="data_masking_study.docx"><i class="bi bi-file-word"></i>MS Word</a></li></ul></div></nav>
 </div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Smart data Masking Function Requirements/Possibilities</h1>
+<h1 class="title">Smart data masking function Requirements/Possibilities</h1>
 </div>
 
 
@@ -132,28 +156,27 @@ window.Quarto = {
 
 </header>
 
-<nav id="TOC" role="doc-toc">
+<nav id="TOC-body" role="doc-toc">
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
   <li><a href="#problem" id="toc-problem"><span class="header-section-number">1</span> Problem</a></li>
-  <li><a href="#when-naive-masking-does-not-work." id="toc-when-naive-masking-does-not-work."><span class="header-section-number">2</span> When naive masking does not work.</a>
+  <li><a href="#requirement-1" id="toc-requirement-1"><span class="header-section-number">2</span> Requirement 1</a>
   <ul>
   <li><a href="#example" id="toc-example"><span class="header-section-number">2.1</span> Example</a></li>
   <li><a href="#expressing-the-problem-using-an-equation" id="toc-expressing-the-problem-using-an-equation"><span class="header-section-number">2.2</span> Expressing the problem using an equation</a></li>
-  <li><a href="#conclusion" id="toc-conclusion"><span class="header-section-number">2.3</span> Conclusion</a></li>
+  <li><a href="#three-scenarios-where-requirement-1-is-not-satisfied" id="toc-three-scenarios-where-requirement-1-is-not-satisfied"><span class="header-section-number">2.3</span> Three scenarios where requirement 1 is not satisfied</a></li>
+  <li><a href="#conclusion" id="toc-conclusion"><span class="header-section-number">2.4</span> Conclusion</a></li>
   </ul></li>
-  <li><a href="#naive-masking-works-in-a-strict-sense-but-we-give-away-too-much-info." id="toc-naive-masking-works-in-a-strict-sense-but-we-give-away-too-much-info."><span class="header-section-number">3</span> Naive masking works in a strict sense, but we give away too much info.</a>
+  <li><a href="#requirement-2-for-a-masked-value-it-is-impossible-to-tell-anything-from-the-value-other-than-it-is-less-than-the-threshold" id="toc-requirement-2-for-a-masked-value-it-is-impossible-to-tell-anything-from-the-value-other-than-it-is-less-than-the-threshold"><span class="header-section-number">3</span> Requirement 2: For a masked value, it is impossible to tell anything from the value other than it is less than the threshold</a>
   <ul>
   <li><a href="#problem-1" id="toc-problem-1"><span class="header-section-number">3.1</span> Problem</a></li>
-  <li><a href="#example-1" id="toc-example-1"><span class="header-section-number">3.2</span> Example</a></li>
-  <li><a href="#solution" id="toc-solution"><span class="header-section-number">3.3</span> Solution</a></li>
+  <li><a href="#three-scenarios" id="toc-three-scenarios"><span class="header-section-number">3.2</span> Three scenarios</a></li>
+  <li><a href="#conclusion-1" id="toc-conclusion-1"><span class="header-section-number">3.3</span> Conclusion</a></li>
   </ul></li>
-  <li><a href="#possible-solutions" id="toc-possible-solutions"><span class="header-section-number">4</span> Possible solutions</a>
+  <li><a href="#recap-function-design-and-possible-solution" id="toc-recap-function-design-and-possible-solution"><span class="header-section-number">4</span> Recap: Function design and possible solution</a>
   <ul>
-  <li><a href="#problem-recap" id="toc-problem-recap"><span class="header-section-number">4.1</span> Problem recap</a></li>
-  <li><a href="#actual-implementation" id="toc-actual-implementation"><span class="header-section-number">4.2</span> Actual implementation</a></li>
-  <li><a href="#possible-solutions-1" id="toc-possible-solutions-1"><span class="header-section-number">4.3</span> Possible solutions</a></li>
+  <li><a href="#possible-solutions" id="toc-possible-solutions"><span class="header-section-number">4.1</span> Possible solutions</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -161,14 +184,17 @@ window.Quarto = {
 <h2 data-number="1" class="anchored" data-anchor-id="problem"><span class="header-section-number">1</span> Problem</h2>
 <ul>
 <li>In tables that display the counts of categorical variables, we want to mask values for categories whose count is less than 5 (or some other threshold <span class="math inline">\(T\)</span>).</li>
-<li>To implement this masking, we need to make sure the value of the masked value can’t be computed from the other values and the totals.</li>
 </ul>
-<p>I’ll call ‘naive masking’ simply changing values less than a threshold by a string ‘Naive Masking’.</p>
-<p>In this doc: First, I explain when naive masking does not work. This results in some rules that can (probably) be implemented in a function that checks every table to check all values are properly masked. I also discuss when naive masking works, but possible solutions are small so that naive masking may still be considered ineffective. Second, I discuss what to do when naive masking does not working but we still want to give as much info as possible (and the category totals will be given).</p>
+<p>I’ll call ‘naive masking’ simply changing values less than a threshold by a string (i.e., ‘&lt;5’). We need to go further than this, though. To properly implement masking, there are two requirements:</p>
+<ul>
+<li><strong>Requirement 1</strong>: We need to make sure the value of the masked value can’t be computed from the other values and the totals.</li>
+<li><strong>Requirement 2</strong>: We need to make sure that it’s not possible to exclude some values in the interval [1,T-1]. I.e., for each masked category, all values in the interval need to be possible.</li>
+</ul>
+<p>In this doc: First, I go over requirements 1 and 2 in detail. I explain when they are satisfied and how to check they are satisfied. Second, I explore one solution. I think a function can be written that checks if requirements are satisfied and, if the solution is deemed satisfactory, also apply the solution.</p>
 </section>
-<section id="when-naive-masking-does-not-work." class="level2" data-number="2">
-<h2 data-number="2" class="anchored" data-anchor-id="when-naive-masking-does-not-work."><span class="header-section-number">2</span> When naive masking does not work.</h2>
-<p>Simply put, naive masking does not work whenever the masked values (the unknowns) are a function of known values (totals and other values). Equivalently (I think), whenever the solution to the unknown values can be worked out using a equation with one unique solution.</p>
+<section id="requirement-1" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="requirement-1"><span class="header-section-number">2</span> Requirement 1</h2>
+<p>Simply put, naive masking does not work whenever the masked values (the unknowns) are computable from known values (totals and other values). Equivalently: whenever the problem can be represented as an equation for which there’s an unique solution.</p>
 <section id="example" class="level3" data-number="2.1">
 <h3 data-number="2.1" class="anchored" data-anchor-id="example"><span class="header-section-number">2.1</span> Example</h3>
 <div class="cell">
@@ -183,53 +209,70 @@ window.Quarto = {
 </section>
 <section id="expressing-the-problem-using-an-equation" class="level3" data-number="2.2">
 <h3 data-number="2.2" class="anchored" data-anchor-id="expressing-the-problem-using-an-equation"><span class="header-section-number">2.2</span> Expressing the problem using an equation</h3>
-<p>For each category, the problem can be represented with the equation:</p>
+<p>For each categorical variable, the problem can be represented with the equation:</p>
 <p><span class="math display">\[ x + y + ... + z = N\]</span></p>
-<p>where <span class="math inline">\(x,y,...,z\)</span> are known integers representing category counts and <span class="math inline">\(N\)</span> is the total.</p>
-<p>Say we have a thresold (<span class="math inline">\(T\)</span>, e.g.&nbsp;5), and we mask values lower than this threshold. We denote masked values with superscript M (e.g., <span class="math inline">\(x^M\)</span>).</p>
-<p>Naive masking won’t work whenever the masked values can be expressed as an equation with one unique solution. More specifically, I came up with 3 scenarios when naive masking won’t work:</p>
-<ol type="1">
-<li><strong>Masking one value without masking the total (or another value) is equivalent to not masking.</strong></li>
-</ol>
+<p>where <span class="math inline">\(x,y,...,z\)</span> are known integers representing category counts and <span class="math inline">\(N\)</span> is the total. We denote masked values (values whose count is less than the threshold) with superscript M (e.g., <span class="math inline">\(x^M\)</span>).</p>
+</section>
+<section id="three-scenarios-where-requirement-1-is-not-satisfied" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="three-scenarios-where-requirement-1-is-not-satisfied"><span class="header-section-number">2.3</span> Three scenarios where requirement 1 is not satisfied</h3>
+<p>I came up with 3 scenarios when the exact value is computable from the other counts and the totals.</p>
+<section id="scenario-1" class="level4" data-number="2.3.1">
+<h4 data-number="2.3.1" class="anchored" data-anchor-id="scenario-1"><span class="header-section-number">2.3.1</span> Scenario 1</h4>
+<p><strong>Masking only one value without masking another value (or the total)</strong></p>
 <p><span class="math display">\[ x + y  + ... + z = N\]</span></p>
 <p>If we mask one value (<span class="math inline">\(x^M\)</span>), this turns into an linear equation with one unknown and thus an unique solution.</p>
 <p><span class="math display">\[ x^M = N - y - ... - z \]</span></p>
 <p>(This is the case represented by the first example)</p>
-<ol start="2" type="1">
-<li><strong>Masking multiple values is equivalent to not masking in two scenarios</strong></li>
-</ol>
-<p>In general an equation with two or more unknowns has no solution. But given the restrictions (all values are positive integers), there are two special cases where there’s only one possible solution:</p>
-<p>2.1. <strong>When all original masked values are one, because one can still work it out from the total.</strong></p>
+</section>
+<section id="scenarios-2-and-3-masking-two-or-more-values-but-unique-solutions-still-exist" class="level4" data-number="2.3.2">
+<h4 data-number="2.3.2" class="anchored" data-anchor-id="scenarios-2-and-3-masking-two-or-more-values-but-unique-solutions-still-exist"><span class="header-section-number">2.3.2</span> Scenarios 2 and 3: <strong>Masking two or more values, but unique solutions still exist</strong></h4>
+<p>In general, an equation with two or more unknowns has no solution. But given the restrictions (all values are positive integers), there are two special cases where there’s only one possible solution:</p>
+<section id="when-all-original-masked-values-are-one-because-one-can-still-work-it-out-from-the-total." class="level5" data-number="2.3.2.1">
+<h5 data-number="2.3.2.1" class="anchored" data-anchor-id="when-all-original-masked-values-are-one-because-one-can-still-work-it-out-from-the-total."><span class="header-section-number">2.3.2.1</span> <strong>When all original masked values are one, because one can still work it out from the total.</strong></h5>
 <p>For instance, we mask two values.</p>
 <p><span class="math display">\[ x^M + y^M  + ... + z = N\]</span></p>
 <p>If <span class="math inline">\(x^M = y^M = 1\)</span> then</p>
-<p><span class="math display">\[ x^M + y^M = N - ... - z == 2 \]</span></p>
-<p>Even if you don’t know what the original <span class="math inline">\(x^M\)</span> and <span class="math inline">\(y^M\)</span> values are, if you know $ N - … - z $ and the number of masked values (# M), the only solution is that all values are 1. This is general always the case when the result of substracting unmasked values from the total is equal to the number of masekd values.</p>
-<p>2.1. <strong>When all masked values are equal to the highest possible value of the masked value</strong></p>
-<p>Say threshold is less or equal than 5.</p>
+<p><span class="math display">\[ x^M + y^M = N - ... - z = 2 \]</span></p>
+<p>Even if you don’t know what the original <span class="math inline">\(x^M\)</span> and <span class="math inline">\(y^M\)</span> values are, if you know <span class="math inline">\(N - ... - z\)</span> and the number of masked values (<span class="math inline">\(\#M\)</span>), the only solution is that all values are 1. This is general always the case when the result of substracting unmasked values from the total is equal to the number of masked values.</p>
+</section>
+<section id="when-all-masked-values-are-equal-to-the-highest-possible-value-of-the-masked-values" class="level5" data-number="2.3.2.2">
+<h5 data-number="2.3.2.2" class="anchored" data-anchor-id="when-all-masked-values-are-equal-to-the-highest-possible-value-of-the-masked-values"><span class="header-section-number">2.3.2.2</span> <strong>When all masked values are equal to the highest possible value of the masked values</strong></h5>
+<p>Assume threshold is 5 (interval is [1,4]).</p>
 <p><span class="math display">\[ x^M + y^M  + ... + z = N\]</span></p>
-<p>If <span class="math inline">\(x^M = y^M = 5\)</span> then</p>
-<p><span class="math display">\[ x^M + y^M = N - ... - z == 10 \]</span></p>
-<p>Again there’s only one solution for the individual values of <span class="math inline">\(x^M\)</span> and <span class="math inline">\(y^M\)</span>. So this is equivalent to masking.</p>
-</section>
-<section id="conclusion" class="level3" data-number="2.3">
-<h3 data-number="2.3" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">2.3</span> Conclusion</h3>
-<p>Naive masking won’t work if you can specify the counts as an equation, and it is possible to work out the unknowns (masked values), i.e., the equation has unique solutions.</p>
-<p>Possible solution: Try to solve the system of equations with some R library (or base R) and proper restrictions (positive integers). If there’s unique solution to the there’s no masking.</p>
-<p>NB: I am not 100% sure there’re more than the 3 scenarios where masking will work, but I think framing the problem as ‘is there an unique solution to this equation, where the masked values are the unknown?’ should cover every possibly scenario. As long as we find a way to always answer this question (given restrictions on possible solutions), it should be fine.</p>
+<p>If <span class="math inline">\(x^M = y^M = 4\)</span> then</p>
+<p><span class="math display">\[ x^M + y^M = N - ... - z = 8 \]</span></p>
+<p>Again there’s only one solution for the individual values of <span class="math inline">\(x^M\)</span> and <span class="math inline">\(y^M\)</span> (4 for both). So this is equivalent to not masking</p>
 </section>
 </section>
-<section id="naive-masking-works-in-a-strict-sense-but-we-give-away-too-much-info." class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="naive-masking-works-in-a-strict-sense-but-we-give-away-too-much-info."><span class="header-section-number">3</span> Naive masking works in a strict sense, but we give away too much info.</h2>
+</section>
+<section id="conclusion" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">2.4</span> Conclusion</h3>
+<p>Naive masking won’t work if you can specify the counts as an equation, and it is possible to work out the unknowns (masked values), i.e., the equation has an unique solution.</p>
+<p>Possible solution: Frame the problem as a linear equation with one or more unknowns. Try to solve for the unknowns with some R library (or base R), considering restrictions on possible solutions (positive integers). If there’s unique solution to the equation, then there’s no masking.</p>
+<p>NB: I am not 100% sure there’re more than the 3 scenarios where naive masking will not work, but I think framing the problem as ‘is there an unique solution to this equation, where the masked values are the unknowns?’ should cover every possibly scenario. As long as we find a way to always answer this question (given restrictions on possible solutions), it should be clear whether Requirement 1 is satisfied or not.</p>
+</section>
+</section>
+<section id="requirement-2-for-a-masked-value-it-is-impossible-to-tell-anything-from-the-value-other-than-it-is-less-than-the-threshold" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="requirement-2-for-a-masked-value-it-is-impossible-to-tell-anything-from-the-value-other-than-it-is-less-than-the-threshold"><span class="header-section-number">3</span> Requirement 2: For a masked value, it is impossible to tell anything from the value other than it is less than the threshold</h2>
 <section id="problem-1" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="problem-1"><span class="header-section-number">3.1</span> Problem</h3>
 <ul>
-<li>Typically when we mask, we say a value is less than 5. What we want is to give no other information than that value is an integer in the interval [1,4], with no value being impossible.</li>
-<li>Sometimes when applying naive masking, it’s impossible to know the exact value, but it is still possible to exclude some values from the interval, e.g, you know the value is either 1 or 2.</li>
+<li>Typically when we mask, we say a value is less than 5. What we want is to give no other information than that value is an integer in the interval [1,4]. For all category counts, the values 1, 2, 3 and 4 are possible.</li>
+<li>Sometimes, when applying naive masking, it’s impossible to know the exact value (Requirement 1 is satisfied). However, it is still possible to infer some values from the interval are not possible for a given category count (i.e., the category count has to be 1 or 2, but can’t be 3 or 4)</li>
 </ul>
 </section>
-<section id="example-1" class="level3" data-number="3.2">
-<h3 data-number="3.2" class="anchored" data-anchor-id="example-1"><span class="header-section-number">3.2</span> Example</h3>
+<section id="three-scenarios" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="three-scenarios"><span class="header-section-number">3.2</span> Three scenarios</h3>
+<p>Depending on the information available from the sum of the unmasked values and the total, you can classify all cases in 3 scenarios.</p>
+<section id="scenario-1-always-possible-to-exclude-some-values-in-the-interval" class="level4" data-number="3.2.1">
+<h4 data-number="3.2.1" class="anchored" data-anchor-id="scenario-1-always-possible-to-exclude-some-values-in-the-interval"><span class="header-section-number">3.2.1</span> Scenario 1: Always possible to exclude some values in the interval</h4>
+<ul>
+<li>Whenever this is true, you know for sure some values included in the interval are impossible for any category count.</li>
+</ul>
+<p><span class="math display">\[ N - w - ... - z &lt; T + \# M - 2 \]</span></p>
+<p>where T is the threshold (i.e.&nbsp;5), <span class="math inline">\(\# M\)</span> is the number of ‘Naively masked’ variables, N is the total and w,…,z are the counts for other variables.</p>
+<section id="example-1" class="level5" data-number="3.2.1.1">
+<h5 data-number="3.2.1.1" class="anchored" data-anchor-id="example-1"><span class="header-section-number">3.2.1.1</span> Example</h5>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cat_value <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">97</span>, <span class="dv">100</span>) </span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>total <span class="ot">&lt;-</span> <span class="fu">sum</span>(cat_value)</span>
@@ -239,48 +282,33 @@ window.Quarto = {
 </div>
 </div>
 <p>If our threshold is 5, we would mask the values 2 (let’s call it <span class="math inline">\(x^M\)</span>) and 1 (let’s call it <span class="math inline">\(y^M\)</span>). But then we know</p>
-<p>$200 - 97 - 100 = 3 $</p>
+<p><span class="math display">\[ 200 - 97 - 100 = 3 \]</span></p>
 <p>or</p>
 <p><span class="math display">\[ N - z - w = x^M + y^M\]</span></p>
-<p>Even though we want to say that the value for both x and y is <span class="math inline">\(&lt;5\)</span> (i.e., between 1 and 4), in this example you can tell that for x (or y) it is either 2 or 1. It’s impossible to tell the exact value, because there’s no unique solution. But we know the value is neither 3 nor 4.</p>
+<p>Even though we want to say that the value for both x and y is <span class="math inline">\(&lt;5\)</span> (i.e., between 1 and 4), in this example you can tell that for x (or y) it is either 2 or 1. It’s impossible to tell the exact value, because there’s no unique solution. But we know the value is neither 3 nor 4 for any of them.</p>
 </section>
-<section id="solution" class="level3" data-number="3.3">
-<h3 data-number="3.3" class="anchored" data-anchor-id="solution"><span class="header-section-number">3.3</span> Solution</h3>
-<p>When the original value is masked ‘naively’, we want to make sure all values in the interval are theoretically possible, given the rest of the provided information (counts for other categories and totals). This depends exactly on the other information: the remaining value after substracting the sum of the other category counts to the total. It turns out this is the case whenever the following is true:</p>
-<p><span class="math display">\[ N - w - ... z \geq T + \# M - 2 \]</span></p>
-<p>where T is the thresold (i.e.&nbsp;5 in less than 5), $ # M $ is the number of ‘Naively masked’ variables, N is the total and w,…,z are the counts for other variables.</p>
-<p>(There’s an upper threshold as well, but I don’t discuss it because it’s a case where the equation would have an unique solution).</p>
-<p>Weird formula I guess, but easy (?) to see with an example. If there’re two unknowns, the formula becomes:</p>
-<p><span class="math display">\[ N - w - ... z \geq T \]</span> So you have masked two variables (x and y) and the threshold is 5. If you substract the values of the unmasked categories from the total, you get 5. Now x can be any value between 1 and 4 (and y too). If you would get 5, you would know x can’t be 5 (because y would need to be 0).</p>
-<p>If you have 3 masked variables, then the number is 6 (5 + 3 - 2). It is always possible, for all variables, to be either 1, 2, 3 and 4.</p>
-<p>In words: if the difference between the totals and the unmasked categories is higher than the threshold + the number of masked values - 1, then:</p>
-<ul>
-<li>For a specific masked value, nobody can tell if its value is 4 or smaller than 4.</li>
-<li>But in many cases (e.g., when the exact equality holds), you know at least one value is smaller than five. You just don’t know which one. Maybe this is enough.</li>
-</ul>
-<section id="example-2" class="level4" data-number="3.3.1">
-<h4 data-number="3.3.1" class="anchored" data-anchor-id="example-2"><span class="header-section-number">3.3.1</span> Example</h4>
+</section>
+<section id="scenario-2-never-possible-to-exclude-any-variables." class="level4" data-number="3.2.2">
+<h4 data-number="3.2.2" class="anchored" data-anchor-id="scenario-2-never-possible-to-exclude-any-variables."><span class="header-section-number">3.2.2</span> Scenario 2: Never possible to exclude any variables.</h4>
+<p><span class="math display">\[ N - w - ... - z = T + \# M - 2 \]</span></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cat_value <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">97</span>, <span class="dv">100</span>)</span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cat_value <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">97</span>, <span class="dv">100</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>total <span class="ot">&lt;-</span> <span class="fu">sum</span>(cat_value)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>total</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 203</code></pre>
+<pre><code>[1] 202</code></pre>
 </div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># we would mask 2 and 4, let's call them x and y</span></span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># we would mask 2 and 3, let's call them x and y</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>total <span class="sc">-</span> <span class="dv">100</span> <span class="sc">-</span> <span class="dv">97</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 6</code></pre>
+<pre><code>[1] 5</code></pre>
 </div>
 </div>
-<p>You know either x or y is not 5 (because both can’t be 5. Actually both can’t be 4, or one 5 and another 4, etc). But you are saying nothing about the values: x could be 5, 4, 3, 2 or 1. Same for y.</p>
-<p>You reveal some info: both masked are not close to the threshold. But you can’t tell which one, and all values below the threshold are possible for both counts. This is the info you are giving: <em>at least one of the values is not equal to 4 (or equal to T - 1 in general)</em>. But you can’t tell for <em>any specific value</em> whether it is exactly equal to 5 or not.</p>
-</section>
-<section id="potential-problem" class="level4" data-number="3.3.2">
-<h4 data-number="3.3.2" class="anchored" data-anchor-id="potential-problem"><span class="header-section-number">3.3.2</span> Potential problem</h4>
-<p>This strategy might seem ok, but it scales a bit badly. Say that, naively, you would mask 6 values.</p>
+<p>You know one of x or y is not 4, because the sum of both of them is 5. Actually both can’t be 3 either, or one 4 and another 3, etc. But you are saying nothing about the particular values: x could be 5, 4, 3, 2 or 1. Same for y.</p>
+<p>You reveal some info: both masked are not close to the threshold. But you can’t tell which one is closer, and all values below the threshold are possible for both counts. This is the info you are giving: <em>at least one of the values is not equal to 4 (or equal to T - 1 in general)</em>. But you can’t tell for <em>any specific value</em> whether it is exactly equal to 4 or not.</p>
+<section id="potential-problem" class="level5" data-number="3.2.2.1">
+<h5 data-number="3.2.2.1" class="anchored" data-anchor-id="potential-problem"><span class="header-section-number">3.2.2.1</span> Potential problem</h5>
+<p>This might seem always ok, but it scales a bit badly. Say that, naively, you would mask 6 values.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>cat_value <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">97</span>, <span class="dv">100</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>total <span class="ot">&lt;-</span> <span class="fu">sum</span>(cat_value)</span>
@@ -293,82 +321,110 @@ window.Quarto = {
 <pre><code>[1] 13</code></pre>
 </div>
 </div>
-<p>Here you know that the sum of the 6 masked values is 13. All values are ‘well masked’, i.e., you can’t tell for any specific value whether it’s 5,4,3,2, or 1. But you are giving away the info that most values are not 5, or 4, or 3. It can be a bit problematic in some edge cases (e.g.&nbsp;there are 10 masked values that add up to 14, you know many values are 1).</p>
-<p>If this is enough, one can just check this rule is satisfied.</p>
+<p>Here you know that the sum of the 6 masked values is 13. All values are ‘well masked’, i.e., you can’t tell for any specific value whether it’s 5,4,3,2, or 1. But you are giving away the info that most values are not 5, or 4, or 3. It can be a bit problematic in some edge cases (e.g.&nbsp;there are 10 masked values that add up to 14, you know many values are 1, even if you don’t know which ones).</p>
+<p>I’d say we can maybe ignore this problem altogether?</p>
 </section>
 </section>
-</section>
-<section id="possible-solutions" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="possible-solutions"><span class="header-section-number">4</span> Possible solutions</h2>
-<section id="problem-recap" class="level3" data-number="4.1">
-<h3 data-number="4.1" class="anchored" data-anchor-id="problem-recap"><span class="header-section-number">4.1</span> Problem recap</h3>
-<ol type="1">
-<li>If you can formulate the count as an equation of the form: <span class="math display">\[ x^M + y^M  + ... + z = N\]</span></li>
-</ol>
-<p>with one unique solution for each unknown, then you are not properly masking. (Important: there can be as many masked variables (superscript M) and as many unmasked variables (no superscripts) as you want in the previous equation).</p>
-<ol start="2" type="1">
-<li>If however there’s not unique solution and you have this:</li>
-</ol>
-<p><span class="math display">\[ N - w - ... z \geq T + \# M - 2 \]</span> then you can’t tell if each value is 4, 3, 2 or 1. But the closer the lhs is to the rhs, the more info you have about the possible values (i.e., you know some values are much smaller).</p>
-</section>
-<section id="actual-implementation" class="level3" data-number="4.2">
-<h3 data-number="4.2" class="anchored" data-anchor-id="actual-implementation"><span class="header-section-number">4.2</span> Actual implementation</h3>
-<p>Write an algorithm that checks that 1 and 2 are satisfied.</p>
-<ul>
-<li>If TRUE, table is fine. Naive masking is enough (or there’s no masking).</li>
-<li>If FALSE, table is not fine. We need to do something else.</li>
-</ul>
-</section>
-<section id="possible-solutions-1" class="level3" data-number="4.3">
-<h3 data-number="4.3" class="anchored" data-anchor-id="possible-solutions-1"><span class="header-section-number">4.3</span> Possible solutions</h3>
-<p>If naively you would mask only one value, one solution is to interval-mask an additional value (e.g., the second smallest value). It’s easier to reason with an example:</p>
+<section id="scenario-3-you-may-or-may-not-give-away-some-info-on-the-intervals" class="level4" data-number="3.2.3">
+<h4 data-number="3.2.3" class="anchored" data-anchor-id="scenario-3-you-may-or-may-not-give-away-some-info-on-the-intervals"><span class="header-section-number">3.2.3</span> Scenario 3: You may or may not give away some info on the intervals</h4>
+<p><span class="math display">\[ N - w - ... - z &gt; T + \# M - 2 \]</span> In this case, sometimes you may not be able to exclude any values, but sometimes you will.</p>
+<section id="example-2" class="level5" data-number="3.2.3.1">
+<h5 data-number="3.2.3.1" class="anchored" data-anchor-id="example-2"><span class="header-section-number">3.2.3.1</span> Example</h5>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cat_value <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">97</span>, <span class="dv">100</span>)</span>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cat_value <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">92</span>, <span class="dv">100</span>) </span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>total <span class="ot">&lt;-</span> <span class="fu">sum</span>(cat_value)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>total</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 198</code></pre>
+</div>
+</div>
+<p><span class="math inline">\(198 - 100 - 192 = 6\)</span></p>
+<p>We would mask two values, and we know their sum is equal to 6. If the threshold is 5 (all values are in the interval [1,4]), that makes it impossible that either value is 1. But say you mask 3 categories and the rhs is 8. Then you can’t tell anything about each value.</p>
+<p>NB: It’s likely one can find the exact boundaries when this works and when it doesn’t, but I think it’s not necessary because below I explain how to check this more generally.</p>
+</section>
+</section>
+</section>
+<section id="conclusion-1" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="conclusion-1"><span class="header-section-number">3.3</span> Conclusion</h3>
+<p>You need to make sure that all values in the interval are possible for all values.</p>
+<p>I think this is equivalent to having an equation with multiple solutions, where at least one solution per masked count is equal to all values in the interval. E.g., there’s a solution where x^M = 1, one where x^M = 2, one where x^M = 3… and check that for every masked value and possible interval.</p>
+<p><strong>Possible way to check requirement 2 is always satisfied</strong>: Frame the problem as an equation where masked variables are unknown, and ask ‘Is there at least one possible solution where the unknown takes the value 1, one where the unknown takes the value 2, one where the unknown takes the value 3… for all possible values and unknowns’. Should be possible to program this, and given restrictions (only positive integers), it shouldn’t be too computationally expensive. It may be a bit of a challenge to program this, though.</p>
+</section>
+</section>
+<section id="recap-function-design-and-possible-solution" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="recap-function-design-and-possible-solution"><span class="header-section-number">4</span> Recap: Function design and possible solution</h2>
+<p>So far, I have focused on when masking works: under which conditions requirements 1 and 2 are satisfied. The main takeaway is that both requirements can be framed as ‘are solutions to some equation possible’. With this, we can work an algorithm of the form:</p>
+<ol type="1">
+<li>Apply naive masking</li>
+<li>Check that, after naive masking, requirements 1 and 2 are satisfied [via appropriate equations and their solutions]</li>
+<li></li>
+</ol>
+<ol type="a">
+<li>If TRUE, table is fine. Naive masking is enough (or there’s no masking).</li>
+<li>If FALSE, table is not fine. We need to do something else.</li>
+</ol>
+<ol start="4" type="1">
+<li>Possibly perform solution (note that even if the solution can’t be automated, we can still write a function checking the requirements are satisfied, potentially saving a lot of time)</li>
+</ol>
+<section id="possible-solutions" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="possible-solutions"><span class="header-section-number">4.1</span> Possible solutions</h3>
+<p>If naively you would mask only one value, one solution is to interval-mask an additional value (e.g., the second smallest value). It’s easier to reason with an example:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>cat_value <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">97</span>, <span class="dv">100</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>total <span class="ot">&lt;-</span> <span class="fu">sum</span>(cat_value)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>total</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 200</code></pre>
 </div>
 </div>
-<p>Here, naive masking is not enough. If you mask 3, you know the value from the totals. A possible solution is to ‘interval-mask’, e.g.,</p>
+<p>Here, naive masking is not enough. If you mask 3, you know the value from the totals. A possible solution is to ‘interval-mask’ another value, e.g.,</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="st">'1-4'</span>, <span class="st">'99-95'</span>, <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="st">'1-4'</span>, <span class="st">'99-96'</span>, <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "1-4"   "99-95" "100"  </code></pre>
+<pre><code>[1] "1-4"   "99-96" "100"  </code></pre>
 </div>
 </div>
-<p>This solution will work always for Scenario 1. But it doesn’t work too well for Scenarios 2.1 and 2.2, I think. Imagine you have this pattern</p>
+<p>As far as I know (or well, think), this solution can be expanded to all scenarios irrespective of the number of masked and unmasked values. The algorithm is:</p>
+<ol type="1">
+<li><p>Naive mask.</p></li>
+<li><p>If requirements are not satisfied, interval-mask another value. Assuming the interval of masked variables is [1,4], the interval for the additionally interval-masked value will be:</p></li>
+</ol>
+<p><span class="math display">\[ [N - \sum Unmasked - \# * 1, N - \sum Unmasked - \# * 4] \]</span> In words: the value of the total minus the sum of the unmasked values mius the number of masked values * 1 is the upper bound of the interval. Same but using 4 is upper bound of interval.</p>
+<section id="example-3" class="level4" data-number="4.1.1">
+<h4 data-number="4.1.1" class="anchored" data-anchor-id="example-3"><span class="header-section-number">4.1.1</span> Example</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">98</span>,<span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>cat_value <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">4</span>, <span class="dv">97</span>, <span class="dv">100</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(cat_value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1]   1   1  98 100</code></pre>
+<pre><code>[1] 205</code></pre>
 </div>
-</div>
-<p>This masking won’t be enough, because of scenario 2.1: If you know the total, there’s only one value the masked values can take.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="st">'&lt;5'</span>, <span class="st">'&lt;5'</span>, <span class="dv">98</span>, <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>upper.int <span class="ot">&lt;-</span> <span class="fu">sum</span>(cat_value) <span class="sc">-</span> <span class="dv">100</span> <span class="sc">-</span> <span class="dv">3</span><span class="sc">*</span><span class="dv">1</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>lower.int <span class="ot">&lt;-</span> <span class="fu">sum</span>(cat_value) <span class="sc">-</span> <span class="dv">100</span> <span class="sc">-</span> <span class="dv">3</span><span class="sc">*</span><span class="dv">4</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>masked.result <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">'&lt;5'</span>, <span class="st">'&lt;5'</span>, <span class="st">'&lt;5'</span>, <span class="fu">paste0</span>(<span class="st">'['</span>, lower.int, <span class="st">'-'</span>, upper.int, <span class="st">']'</span>), <span class="dv">100</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>masked.result                   </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "&lt;5"  "&lt;5"  "98"  "100"</code></pre>
+<pre><code>[1] "&lt;5"       "&lt;5"       "&lt;5"       "[93-102]" "100"     </code></pre>
 </div>
 </div>
-<p>Now we apply interval-masking.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="st">'&lt;5'</span>, <span class="st">'&lt;5'</span>, <span class="st">'95-100'</span>, <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "&lt;5"     "&lt;5"     "95-100" "100"   </code></pre>
-</div>
-</div>
-<p>$ x^M + z + w = N$</p>
-<p>First, add up <span class="math inline">\(x^M + z + w = N\)</span>.</p>
-<p>In addition to the originally naively masked value, mask another value in an interval form.</p>
-<p>Easier solution:</p>
-<p>You can transform variables until conditions hold.</p>
+<p>Since the total is known (205), you know one variable is 100, and all values are possible for the masked: from all equal to 1 (in which case the interval masked value is 102), to all equal to 4 (in which case the interval-masked value is 93).</p>
+<p>NB: Choosing the value to smart-mask can be tricky. I would think it should be the smallest unmasked value, but if it’s close to the thresold (e.g., threshold is 6, interval-masked value is 6, the interval could end up being something like, for instance, [4,8], which tells you is definetely not 4 (else it would be masked!)). Choosing this smartly needs some more thought.</p>
+</section>
+<section id="other-solutions" class="level4" data-number="4.1.2">
+<h4 data-number="4.1.2" class="anchored" data-anchor-id="other-solutions"><span class="header-section-number">4.1.2</span> Other solutions</h4>
+<p>Intuitively I chose this solution because I think it’s the solution where we leave as many values unaltered as possible. I haven’t explored other solutions yet. Possible candidates are:</p>
 <ul>
-<li>Instead of giving information about N, you can give it in a interval: [Nmin, Nmax]</li>
+<li>Rounding/adding noise: the problem is for this to work, we change every value. We lose a lot of precision. And at least rounding can have weird consequences for requirement 2 (see appendix in Linda’s proposal for rounding).</li>
+<li>Differential privacy (I heard this but honestly not sure what this is)</li>
+<li>Merging categories: could be an option too?</li>
+<li>Exploring what’s there: I found a few resources, of which the most important ones are:
+<ul>
+<li><a href="https://zenodo.org/records/10282526">This very recent guide on statistical output checking</a> by Health Data &amp; Analytics Research Environments UK programme (people that got a big grant to figure out this and are applying it to many UK research data infraestructures)</li>
+<li><a href="https://github.com/AI-SDC/ACRO-R">This R and Python package</a> they seem to be creating an R package. that creates common analysis (e.g., tables or models) with in-built statistical ouput control. Still in-progress and not very well documented yet.</li>
+</ul></li>
 </ul>
-<p><span class="math display">\[ N - z - 1 \]</span></p>
-<p>you also have this</p>
-<p><span class="math display">\[ N - w - ... z \geq x^M + ... + y^M \]</span></p>
+<p>I think exploring this is probably a good idea, but also essentially a full-time job for a few weeks.</p>
+</section>
 </section>
 </section>
 

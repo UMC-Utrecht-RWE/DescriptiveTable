@@ -1,8 +1,18 @@
 ---
-title: "Smart data Masking Function Requirements/Possibilities"
+title: "Smart data masking function Requirements/Possibilities"
 author: "Carlos Poses"
 format: 
-  html:
+  html: 
+    toc: true
+    number-sections: true
+    toc-expand: true
+    toc-location: right-body
+  pdf:
+    toc: true
+    number-sections: true
+    toc-expand: true
+    toc-location: body
+  docx: 
     toc: true
     number-sections: true
     toc-expand: true
@@ -12,17 +22,18 @@ editor: source
 
 ## Problem
 
--   In tables that display the counts of categorical variables, we want to mask values for categories whose count is less than 5 (or some other threshold $T$).
--   To implement this masking, we need to make sure the value of the masked value can't be computed from the other values and the totals.
+-   In tables that display the counts of categorical variables, we want to mask values for categories whose count is less than 5 (or some other threshold $T$). 
 
+I'll call 'naive masking' simply changing values less than a threshold by a string (i.e., '<5'). We need to go further than this, though. To properly implement masking, there are two requirements:
 
-I'll call 'naive masking' simply changing values less than a threshold by a string 'Naive Masking'.
+- **Requirement 1**: We need to make sure the value of the masked value can't be computed from the other values and the totals. 
+- **Requirement 2**: We need to make sure that it's not possible to exclude some values in the interval [1,T-1]. I.e., for each masked category, all values in the interval need to be possible.
 
-In this doc: First, I explain when naive masking does not work. This results in some rules that can (probably) be implemented in a function that checks every table to check all values are properly masked. I also discuss when naive masking works, but possible solutions are small so that naive masking may still be considered ineffective. Second, I discuss what to do when naive masking does not working but we still want to give as much info as possible (and the category totals will be given).
+In this doc: First, I go over requirements 1 and 2 in detail. I explain when they are satisfied and how to check they are satisfied. Second, I explore one solution. I think a function can be written that checks if requirements are satisfied and, if the solution is deemed satisfactory, also apply the solution.
 
-## When naive masking does not work.
+## Requirement 1
 
-Simply put, naive masking does not work whenever the masked values (the unknowns) are a function of known values (totals and other values). Equivalently (I think), whenever the solution to the unknown values can be worked out using a equation with one unique solution.
+Simply put, naive masking does not work whenever the masked values (the unknowns) are computable from known values (totals and other values). Equivalently: whenever the problem can be represented as an equation for which there's an unique solution.
 
 ### Example
 
@@ -36,17 +47,19 @@ Masking the value 3 (e.g., substituting it by '<= 5') is not enough if we know t
 
 ### Expressing the problem using an equation
 
-For each category, the problem can be represented with the equation:
+For each categorical variable, the problem can be represented with the equation:
 
 $$ x + y + ... + z = N$$
 
-where $x,y,...,z$ are known integers representing category counts and $N$ is the total.
+where $x,y,...,z$ are known integers representing category counts and $N$ is the total. We denote masked values (values whose count is less than the threshold) with superscript M (e.g., $x^M$). 
 
-Say we have a thresold ($T$, e.g. 5), and we mask values lower than this threshold. We denote masked values with superscript M (e.g., $x^M$).
+### Three scenarios where requirement 1 is not satisfied
 
-Naive masking won't work whenever the masked values can be expressed as an equation with one unique solution. More specifically, I came up with 3 scenarios when naive masking won't work:
+I came up with 3 scenarios when the exact value is computable from the other counts and the totals.
 
-1.  **Masking one value without masking the total (or another value) is equivalent to not masking.**
+#### Scenario 1 
+
+**Masking only one value without masking another value (or the total)**
 
 $$ x + y  + ... + z = N$$ 
 
@@ -56,11 +69,11 @@ $$ x^M = N - y - ... - z $$
 
 (This is the case represented by the first example)
 
-2. **Masking multiple values is equivalent to not masking in two scenarios** 
+#### Scenarios 2 and 3: **Masking two or more values, but unique solutions still exist** 
 
-In general an equation with two or more unknowns has no solution. But given the restrictions (all values are positive integers), there are two special cases where there's only one possible solution:
+In general, an equation with two or more unknowns has no solution. But given the restrictions (all values are positive integers), there are two special cases where there's only one possible solution:
 
-2.1. **When all original masked values are one, because one can still work it out from the total.**
+##### **When all original masked values are one, because one can still work it out from the total.**
 
 For instance, we mask two values. 
 
@@ -68,41 +81,52 @@ $$ x^M + y^M  + ... + z = N$$
 
 If $x^M = y^M = 1$ then
 
-$$ x^M + y^M = N - ... - z == 2 $$ 
+$$ x^M + y^M = N - ... - z = 2 $$ 
 
-Even if you don't know what the original $x^M$ and $y^M$ values are, if you know \$ N - ... - z $ and the number of masked values (\# M), the only solution is that all values are 1.
-This is general always the case when the result of substracting unmasked values from the total is equal to the number of masekd values.
+Even if you don't know what the original $x^M$ and $y^M$ values are, if you know $N - ... - z$ and the number of masked values ($\#M$), the only solution is that all values are 1.
+This is general always the case when the result of substracting unmasked values from the total is equal to the number of masked values.
 
-2.1. **When all masked values are equal to the highest possible value of the masked value**
+##### **When all masked values are equal to the highest possible value of the masked values**
 
-Say threshold is less or equal than 5.
+Assume threshold is 5 (interval is [1,4]).
 
 $$ x^M + y^M  + ... + z = N$$ 
 
-If $x^M = y^M = 5$ then
+If $x^M = y^M = 4$ then
 
-$$ x^M + y^M = N - ... - z == 10 $$
+$$ x^M + y^M = N - ... - z = 8 $$
 
-Again there's only one solution for the individual values of $x^M$ and $y^M$. So this is equivalent to masking.
-
+Again there's only one solution for the individual values of $x^M$ and $y^M$ (4 for both). So this is equivalent to not masking
 
 ### Conclusion
 
-Naive masking won't work if you can specify the counts as an equation, and it is possible to work out the unknowns (masked values), i.e., the equation has unique solutions. 
+Naive masking won't work if you can specify the counts as an equation, and it is possible to work out the unknowns (masked values), i.e., the equation has an unique solution. 
 
-Possible solution: Try to solve the system of equations with some R library (or base R) and proper restrictions (positive integers). If there's unique solution to the there's no masking. 
+Possible solution: Frame the problem as a linear equation with one or more unknowns. Try to solve for the unknowns with some R library (or base R), considering restrictions on possible solutions (positive integers). If there's unique solution to the equation, then there's no masking. 
 
-NB: I am not 100% sure there're more than the 3 scenarios where masking will work, but I think framing the problem as 'is there an unique solution to this equation, where the masked values are the unknown?' should cover every possibly scenario. As long as we find a way to always answer this question (given restrictions on possible solutions), it should be fine.
+NB: I am not 100% sure there're more than the 3 scenarios where naive masking will not work, but I think framing the problem as 'is there an unique solution to this equation, where the masked values are the unknowns?' should cover every possibly scenario. As long as we find a way to always answer this question (given restrictions on possible solutions), it should be clear whether Requirement 1 is satisfied or not.
 
 
-## Naive masking works in a strict sense, but we give away too much info. 
+## Requirement 2: For a masked value, it is impossible to tell anything from the value other than it is less than the threshold
 
 ### Problem
 
-- Typically when we mask, we say a value is less than 5. What we want is to give no other information than that value is an integer in the interval [1,4]. For all categories, the values 1, 2, 3 and 4.
-- Sometimes when applying naive masking, it's impossible to know the exact value, but it is still possible to exclude some values from the interval, e.g, you know the value is either 1 or 2.
+- Typically when we mask, we say a value is less than 5. What we want is to give no other information than that value is an integer in the interval [1,4]. For all category counts, the values 1, 2, 3 and 4 are possible.
+- Sometimes, when applying naive masking, it's impossible to know the exact value (Requirement 1 is satisfied). However, it is still possible to infer some values from the interval are not possible for a given category count (i.e., the category count has to be 1 or 2, but can't be 3 or 4)
 
-### Example
+### Three scenarios
+
+Depending on the information available from the sum of the unmasked values and the total, you can classify all cases in 3 scenarios.
+
+#### Scenario 1: Always possible to exclude some values in the interval
+
+- Whenever this is true, you know for sure some values included in the interval are impossible for any category count.
+
+$$ N - w - ... - z < T + \# M - 2 $$
+
+where T is the threshold (i.e. 5), $\# M$ is the number of 'Naively masked' variables, N is the total and w,...,z are the counts for other variables. 
+
+##### Example 
 
 ```{r}
 cat_value <- c(2, 1, 97, 100) 
@@ -112,71 +136,34 @@ total
 
 If our threshold is 5, we would mask the values 2 (let's call it $x^M$) and 1 (let's call it $y^M$). But then we know
 
-\$200 - 97 - 100 = 3 \$
+$$ 200 - 97 - 100 = 3 $$
 
 or
 
 $$ N - z - w = x^M + y^M$$ 
 
-Even though we want to say that the value for both x and y is $<5$ (i.e., between 1 and 4), in this example you can tell that for x (or y) it is either 2 or 1. It's impossible to tell the exact value, because there's no unique solution. But we know the value is neither 3 nor 4.
+Even though we want to say that the value for both x and y is $<5$ (i.e., between 1 and 4), in this example you can tell that for x (or y) it is either 2 or 1. It's impossible to tell the exact value, because there's no unique solution. But we know the value is neither 3 nor 4 for any of them.
 
-### A trickier example
+
+#### Scenario 2: Never possible to exclude any variables.
+
+$$ N - w - ... - z = T + \# M - 2 $$
 
 ```{r}
-cat_value <- c(2, 4, 92, 100) 
+cat_value <- c(3, 2, 97, 100)
 total <- sum(cat_value)
 total
-```
-
-$198 - 192 = 6$
-
-We would mask two values, and we know their sum is equal to 6. That makes it impossible that either value is 1.
-
-### An example that works
-
-```{r}
-# we would mask 2 and 4, let's call them x and y
+# we would mask 2 and 3, let's call them x and y
 total - 100 - 97
 ```
-You know either x or y is not 5 (because both can't be 5. Actually both can't be 4, or one 5 and another 4, etc). But you are saying nothing about the values: x could be 5, 4, 3, 2 or 1. Same for y.
+You know one of x or y is not 4, because the sum of both of them is 5. Actually both can't be 3 either, or one 4 and another 3, etc. But you are saying nothing about the particular values: x could be 5, 4, 3, 2 or 1. Same for y.
 
-You reveal some info: both masked are not close to the threshold. But you can't tell which one, and all values below the threshold are possible for both counts. 
-This is the info you are giving: *at least one of the values is not equal to 4 (or equal to T - 1 in general)*. But you can't tell for *any specific value* whether it is exactly equal to 5 or not. 
+You reveal some info: both masked are not close to the threshold. But you can't tell which one is closer, and all values below the threshold are possible for both counts. 
+This is the info you are giving: *at least one of the values is not equal to 4 (or equal to T - 1 in general)*. But you can't tell for *any specific value* whether it is exactly equal to 4 or not. 
 
-### Formalizing it
+##### Potential problem 
 
-When the original value is masked 'naively', we want to make sure all values in the interval are theoretically possible, given the rest of the provided information (counts for other categories and totals). This depends exactly on the other information: the remaining value after substracting the sum of the other category counts to the total. It turns out this is the case whenever the following is true:
-
-$$ N - w - ... z \geq T + \# M - 2 $$
-
-where T is the thresold (i.e. 5 in less than 5), $ \# M $ is the number of 'Naively masked' variables, N is the total and w,...,z are the counts for other variables.
-
-(There's an upper threshold as well, but I don't discuss it because it's a case where the equation would have an unique solution).
-
-Weird formula I guess, but easy (?) to see with an example. If there're two unknowns, the formula becomes:
-
-$$ N - w - ... z \geq T $$
-So you have masked two variables (x and y) and the threshold is 5. If you substract the values of the unmasked categories from the total, you get 5. Now x can be any value between 1 and 4 (and y too). If you would get 5, you would know x can't be 5 (because y would need to be 0).
-
-If you have 3 masked variables, then the number is 6 (5 + 3 - 2). It is always possible, for all variables, to be either 1, 2, 3 and 4.
-
-In words: if the difference between the totals and the unmasked categories is higher than the threshold + the number of masked values - 1, then:
-
-- For a specific masked value, nobody can tell if its value is 4 or smaller than 4.
-- But in many cases (e.g., when the exact equality holds), you know at least one value is smaller than five. You just don't know which one. Maybe this is enough.
-
-#### Example
-
-```{r}
-cat_value <- c(2, 4, 97, 100)
-total <- sum(cat_value)
-total
-```
-
-
-#### Potential problem 
-
-This strategy might seem ok, but it scales a bit badly. Say that, naively, you would mask 6 values.
+This might seem always ok, but it scales a bit badly. Say that, naively, you would mask 6 values.
 ```{r}
 cat_value <- c(2,1,1,2,3, 4, 97, 100)
 total <- sum(cat_value)
@@ -184,37 +171,55 @@ total
 total - 100 - 97
 ```
 
-Here you know that the sum of the 6 masked values is 13. All values are 'well masked', i.e., you can't tell for any specific value whether it's 5,4,3,2, or 1. But you are giving away the info that most values are not 5, or 4, or 3. It can be a bit problematic in some edge cases (e.g. there are 10 masked values that add up to 14, you know many values are 1).
+Here you know that the sum of the 6 masked values is 13. All values are 'well masked', i.e., you can't tell for any specific value whether it's 5,4,3,2, or 1. But you are giving away the info that most values are not 5, or 4, or 3. It can be a bit problematic in some edge cases (e.g. there are 10 masked values that add up to 14, you know many values are 1, even if you don't know which ones). 
 
-If this is enough, one can just check this rule is satisfied.
+I'd say we can maybe ignore this problem altogether? 
+
+#### Scenario 3: You may or may not give away some info on the intervals
+
+$$ N - w - ... - z > T + \# M - 2 $$
+In this case, sometimes you may not be able to exclude any values, but sometimes you will.
+
+##### Example
+
+```{r}
+cat_value <- c(2, 4, 92, 100) 
+total <- sum(cat_value)
+total
+```
+
+$198 - 100 - 192 = 6$
+
+We would mask two values, and we know their sum is equal to 6. If the threshold is 5 (all values are in the interval [1,4]), that makes it impossible that either value is 1. But say you mask 3 categories and the rhs is 8. Then you can't tell anything about each value.
+
+NB: It's likely one can find the exact boundaries when this works and when it doesn't, but I think it's not necessary because below I explain how to check this more generally.
+
+### Conclusion
+
+You need to make sure that all values in the interval are possible for all values. 
+
+I think this is equivalent to having an equation with multiple solutions, where at least one solution per masked count is equal to all values in the interval. E.g., there's a solution where x^M = 1, one where x^M = 2, one where x^M = 3... and check that for every masked value and possible interval.
+
+**Possible way to check requirement 2 is always satisfied**: 
+Frame the problem as an equation where masked variables are unknown, and ask 'Is there at least one possible solution where the unknown takes the value 1, one where the unknown takes the value 2, one where the unknown takes the value 3... for all possible values and unknowns'. Should be possible to program this, and given restrictions (only positive integers), it shouldn't be too computationally expensive. It may be a bit of a challenge to program this, though.
 
 
-## Possible solutions
+## Recap: Function design and possible solution
 
-### Problem recap
+So far, I have focused on when masking works: under which conditions requirements 1 and 2 are satisfied. The main takeaway is that both requirements can be framed as 'are solutions to some equation possible'. With this, we can work an algorithm of the form:
 
-1. If you can formulate the count as an equation of the form:
-$$ x^M + y^M  + ... + z = N$$ 
+1. Apply naive masking
+2. Check that, after naive masking, requirements 1 and 2 are satisfied [via appropriate equations and their solutions]
+3. 
 
-with one unique solution for each unknown, then you are not properly masking.
-(Important: there can be as many masked variables (superscript M) and as many unmasked variables (no superscripts) as you want in the previous equation).
+a) If TRUE, table is fine. Naive masking is enough (or there's no masking). 
+b) If FALSE, table is not fine. We need to do something else.
 
-2. If however there's not unique solution and you have this:
-
-$$ N - w - ... z \geq T + \# M - 2 $$ 
-then you can't tell if each value is 4, 3, 2 or 1. But the closer the lhs is to the rhs, the more info you have about the possible values (i.e., you know some values are much smaller).
-
-### Actual implementation
-
-Write an algorithm that checks that 1 and 2 are satisfied.
-
-- If TRUE, table is fine. Naive masking is enough (or there's no masking).
-- If FALSE, table is not fine. We need to do something else.
+4. Possibly perform solution (note that even if the solution can't be automated, we can still write a function checking the requirements are satisfied, potentially saving a lot of time)
 
 ### Possible solutions
 
 If naively you would mask only one value, one solution is to interval-mask an additional value (e.g., the second smallest value). It's easier to reason with an example:
-
 
 ```{r}
 cat_value <- c(3, 97, 100)
@@ -222,51 +227,49 @@ total <- sum(cat_value)
 total
 ```
 
-Here, naive masking is not enough. If you mask 3, you know the value from the totals. A possible solution is to 'interval-mask', e.g., 
+Here, naive masking is not enough. If you mask 3, you know the value from the totals. A possible solution is to 'interval-mask' another value, e.g., 
 
 ```{r}
-c('1-4', '99-95', 100)
+c('1-4', '99-96', 100)
 ```
-This solution will work always for Scenario 1. But it doesn't work too well for Scenarios 2.1 and 2.2, I think. Imagine you have this pattern
+
+As far as I know (or well, think), this solution can be expanded to all scenarios irrespective of the number of masked and unmasked values. The algorithm is:
+
+1. Naive mask.
+
+2. If requirements are not satisfied, interval-mask another value. Assuming the interval of masked variables is [1,4], the interval for the additionally interval-masked value will be:
+
+$$ [N - \sum Unmasked - \# * 1, N - \sum Unmasked - \# * 4] $$
+In words: the value of the total minus the sum of the unmasked values mius the number of masked values * 1 is the upper bound of the interval. Same but using 4 is upper bound of interval.
+
+#### Example
+
 ```{r}
-c(1,1,98,100)
+cat_value <- c(1,3,4, 97, 100)
+sum(cat_value)
+
+upper.int <- sum(cat_value) - 100 - 3*1
+lower.int <- sum(cat_value) - 100 - 3*4
+
+masked.result <- c('<5', '<5', '<5', paste0('[', lower.int, '-', upper.int, ']'), 100)
+masked.result                   
 ```
-This masking won't be enough, because of scenario 2.1: If you know the total, there's only one value the masked values can take.
-```{r}
-c('<5', '<5', 98, 100)
-```
-Now we apply interval-masking.
-```{r}
-c('<5', '<5', '95-100', 100)
-```
 
+Since the total is known (205), you know one variable is 100, and all values are possible for the masked: from all equal to 1 (in which case the interval masked value is 102), to all equal to 4 (in which case the interval-masked value is 93).
 
+NB: Choosing the value to smart-mask can be tricky. I would think it should be the smallest unmasked value, but if it's close to the thresold (e.g., threshold is 6, interval-masked value is 6, the interval could end up being something like, for instance, [4,8], which tells you is definetely not 4 (else it would be masked!)). Choosing this smartly needs some more thought.
 
+#### Other solutions
 
+Intuitively I chose this solution because I think it's the solution where we leave as many values unaltered as possible. I haven't explored other solutions yet. Possible candidates are:
 
-$ x^M + z + w = N$
+- Rounding/adding noise: the problem is for this to work, we change every value. We lose a lot of precision. And at least rounding can have weird consequences for requirement 2 (see appendix in Linda's proposal for rounding).
+- Differential privacy (I heard this but honestly not sure what this is)
+- Merging categories: could be an option too?
+- Exploring what's there: I found a few resources, of which the most important ones are:
+  - [This very recent guide on statistical output checking](https://zenodo.org/records/10282526) by Health Data & Analytics Research Environments UK programme (people that got a big grant to figure out this and are applying it to many UK research data infraestructures)
+  - [This R and Python package](https://github.com/AI-SDC/ACRO-R) they seem to be creating an R package. that creates common analysis (e.g., tables or models) with in-built statistical ouput control. Still in-progress and not very well documented yet.
 
-First, add up $x^M + z + w = N$.
-
-
-
-
-
-
-In addition to the originally naively masked value, mask another value in an interval form.
-
-Easier solution:
-
-You can transform variables until conditions hold.
-
-- Instead of giving information about N, you can give it in a interval: [Nmin, Nmax]
-
-$$ N - z - 1 $$ 
-
-
-you also have this
-
-$$ N - w - ... z \geq x^M + ... + y^M $$
-
+I think exploring this is probably a good idea, but also essentially a full-time job for a few weeks.
 
 
