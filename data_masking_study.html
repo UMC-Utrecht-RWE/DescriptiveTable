@@ -185,7 +185,7 @@ window.Quarto = {
 <ul>
 <li>In tables that display the counts of categorical variables, we want to mask values for categories whose count is less than 5 (or some other threshold <span class="math inline">\(T\)</span>).</li>
 </ul>
-<p>I’ll call ‘naive masking’ simply changing values less than a threshold by a string (i.e., ‘&lt;5’). We need to go further than this, though. To properly implement masking, there are two requirements:</p>
+<p>I’ll call ‘naive masking’ simply changing values less than a threshold by a string (i.e., ‘&lt;5’). We need to go further than this, though. To properly implement masking, there are two extra requirements:</p>
 <ul>
 <li><strong>Requirement 1</strong>: We need to make sure the value of the masked value can’t be computed from the other values and the totals.</li>
 <li><strong>Requirement 2</strong>: We need to make sure that it’s not possible to exclude some values in the interval [1,T-1]. I.e., for each masked category, all values in the interval need to be possible.</li>
@@ -227,8 +227,8 @@ window.Quarto = {
 <section id="scenarios-2-and-3-masking-two-or-more-values-but-unique-solutions-still-exist" class="level4" data-number="2.3.2">
 <h4 data-number="2.3.2" class="anchored" data-anchor-id="scenarios-2-and-3-masking-two-or-more-values-but-unique-solutions-still-exist"><span class="header-section-number">2.3.2</span> Scenarios 2 and 3: <strong>Masking two or more values, but unique solutions still exist</strong></h4>
 <p>In general, an equation with two or more unknowns has no solution. But given the restrictions (all values are positive integers), there are two special cases where there’s only one possible solution:</p>
-<section id="when-all-original-masked-values-are-one-because-one-can-still-work-it-out-from-the-total." class="level5" data-number="2.3.2.1">
-<h5 data-number="2.3.2.1" class="anchored" data-anchor-id="when-all-original-masked-values-are-one-because-one-can-still-work-it-out-from-the-total."><span class="header-section-number">2.3.2.1</span> <strong>When all original masked values are one, because one can still work it out from the total.</strong></h5>
+<section id="when-all-original-masked-values-are-one-because-one-can-still-work-them-out-from-the-total." class="level5" data-number="2.3.2.1">
+<h5 data-number="2.3.2.1" class="anchored" data-anchor-id="when-all-original-masked-values-are-one-because-one-can-still-work-them-out-from-the-total."><span class="header-section-number">2.3.2.1</span> <strong>When all original masked values are one, because one can still work them out from the total.</strong></h5>
 <p>For instance, we mask two values.</p>
 <p><span class="math display">\[ x^M + y^M  + ... + z = N\]</span></p>
 <p>If <span class="math inline">\(x^M = y^M = 1\)</span> then</p>
@@ -248,8 +248,8 @@ window.Quarto = {
 <section id="conclusion" class="level3" data-number="2.4">
 <h3 data-number="2.4" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">2.4</span> Conclusion</h3>
 <p>Naive masking won’t work if you can specify the counts as an equation, and it is possible to work out the unknowns (masked values), i.e., the equation has an unique solution.</p>
-<p>Possible solution: Frame the problem as a linear equation with one or more unknowns. Try to solve for the unknowns with some R library (or base R), considering restrictions on possible solutions (positive integers). If there’s unique solution to the equation, then there’s no masking.</p>
-<p>NB: I am not 100% sure there’re more than the 3 scenarios where naive masking will not work, but I think framing the problem as ‘is there an unique solution to this equation, where the masked values are the unknowns?’ should cover every possibly scenario. As long as we find a way to always answer this question (given restrictions on possible solutions), it should be clear whether Requirement 1 is satisfied or not.</p>
+<p>Possible solution: Frame the problem as a linear equation with one or more unknowns. Try to solve for the unknowns with some R library (or base R), considering restrictions on possible solutions (positive integers). If there’s a unique solution to the equation, then there’s no masking.</p>
+<p>NB: I am not 100% sure there’re not more than the 3 scenarios where naive masking will not work, but I think framing the problem as ‘is there an unique solution to this equation, where the masked values are the unknowns?’ should cover every possibly scenario when requirement 1 is not satisfied. As long as we find a way to always answer this question (given restrictions on possible solutions to positive integers), it should be clear whether Requirement 1 is satisfied or not.</p>
 </section>
 </section>
 <section id="requirement-2-for-a-masked-value-it-is-impossible-to-tell-anything-from-the-value-other-than-it-is-less-than-the-threshold" class="level2" data-number="3">
@@ -407,7 +407,7 @@ window.Quarto = {
 <pre><code>[1] "&lt;5"       "&lt;5"       "&lt;5"       "[93-102]" "100"     </code></pre>
 </div>
 </div>
-<p>Since the total is known (205), you know one variable is 100, and all values are possible for the masked: from all equal to 1 (in which case the interval masked value is 102), to all equal to 4 (in which case the interval-masked value is 93).</p>
+<p>Since the total is known (205), you know one value is 100, and all values are possible for the masked values: from all equal to 1 (in which case the interval masked value is 102), to all equal to 4 (in which case the interval-masked value is 93).</p>
 <p>NB: Choosing the value to smart-mask can be tricky. I would think it should be the smallest unmasked value, but if it’s close to the thresold (e.g., threshold is 6, interval-masked value is 6, the interval could end up being something like, for instance, [4,8], which tells you is definetely not 4 (else it would be masked!)). Choosing this smartly needs some more thought.</p>
 </section>
 <section id="other-solutions" class="level4" data-number="4.1.2">

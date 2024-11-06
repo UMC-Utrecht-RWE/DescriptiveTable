@@ -24,7 +24,7 @@ editor: source
 
 -   In tables that display the counts of categorical variables, we want to mask values for categories whose count is less than 5 (or some other threshold $T$). 
 
-I'll call 'naive masking' simply changing values less than a threshold by a string (i.e., '<5'). We need to go further than this, though. To properly implement masking, there are two requirements:
+I'll call 'naive masking' simply changing values less than a threshold by a string (i.e., '<5'). We need to go further than this, though. To properly implement masking, there are two extra requirements:
 
 - **Requirement 1**: We need to make sure the value of the masked value can't be computed from the other values and the totals. 
 - **Requirement 2**: We need to make sure that it's not possible to exclude some values in the interval [1,T-1]. I.e., for each masked category, all values in the interval need to be possible.
@@ -73,7 +73,7 @@ $$ x^M = N - y - ... - z $$
 
 In general, an equation with two or more unknowns has no solution. But given the restrictions (all values are positive integers), there are two special cases where there's only one possible solution:
 
-##### **When all original masked values are one, because one can still work it out from the total.**
+##### **When all original masked values are one, because one can still work them out from the total.**
 
 For instance, we mask two values. 
 
@@ -102,9 +102,9 @@ Again there's only one solution for the individual values of $x^M$ and $y^M$ (4 
 
 Naive masking won't work if you can specify the counts as an equation, and it is possible to work out the unknowns (masked values), i.e., the equation has an unique solution. 
 
-Possible solution: Frame the problem as a linear equation with one or more unknowns. Try to solve for the unknowns with some R library (or base R), considering restrictions on possible solutions (positive integers). If there's unique solution to the equation, then there's no masking. 
+Possible solution: Frame the problem as a linear equation with one or more unknowns. Try to solve for the unknowns with some R library (or base R), considering restrictions on possible solutions (positive integers). If there's a unique solution to the equation, then there's no masking. 
 
-NB: I am not 100% sure there're more than the 3 scenarios where naive masking will not work, but I think framing the problem as 'is there an unique solution to this equation, where the masked values are the unknowns?' should cover every possibly scenario. As long as we find a way to always answer this question (given restrictions on possible solutions), it should be clear whether Requirement 1 is satisfied or not.
+NB: I am not 100% sure there're not more than the 3 scenarios where naive masking will not work, but I think framing the problem as 'is there an unique solution to this equation, where the masked values are the unknowns?' should cover every possibly scenario when requirement 1 is not satisfied. As long as we find a way to always answer this question (given restrictions on possible solutions to positive integers), it should be clear whether Requirement 1 is satisfied or not.
 
 
 ## Requirement 2: For a masked value, it is impossible to tell anything from the value other than it is less than the threshold
@@ -255,7 +255,7 @@ masked.result <- c('<5', '<5', '<5', paste0('[', lower.int, '-', upper.int, ']')
 masked.result                   
 ```
 
-Since the total is known (205), you know one variable is 100, and all values are possible for the masked: from all equal to 1 (in which case the interval masked value is 102), to all equal to 4 (in which case the interval-masked value is 93).
+Since the total is known (205), you know one value is 100, and all values are possible for the masked values: from all equal to 1 (in which case the interval masked value is 102), to all equal to 4 (in which case the interval-masked value is 93).
 
 NB: Choosing the value to smart-mask can be tricky. I would think it should be the smallest unmasked value, but if it's close to the thresold (e.g., threshold is 6, interval-masked value is 6, the interval could end up being something like, for instance, [4,8], which tells you is definetely not 4 (else it would be masked!)). Choosing this smartly needs some more thought.
 
