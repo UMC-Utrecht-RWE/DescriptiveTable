@@ -31,7 +31,7 @@ I'll call 'naive masking' simply changing values less than a threshold by a stri
 
 In this doc: First, I go over requirements 1 and 2 in detail. I explain when they are satisfied and how to check they are satisfied. Second, I explore one solution. I think a function can be written that checks if requirements are satisfied and, if the solution is deemed satisfactory, also apply the solution.
 
-## Requirement 1
+## Requirement 1: The masked value is not computable from other known values
 
 Simply put, naive masking does not work whenever the masked values (the unknowns) are computable from known values (totals and other values). Equivalently: whenever the problem can be represented as an equation for which there's an unique solution.
 
