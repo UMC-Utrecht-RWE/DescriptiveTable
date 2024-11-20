@@ -4,6 +4,7 @@ author: "Carlos Poses"
 format: 
   html: 
     toc: true
+    embed-resources: true
     number-sections: true
     toc-expand: true
     toc-location: right-body
@@ -27,7 +28,7 @@ editor: source
 I'll call 'naive masking' simply changing values less than a threshold by a string (i.e., '<5'). We need to go further than this, though. To properly implement masking, there are two extra requirements:
 
 - **Requirement 1**: We need to make sure the value of the masked value can't be computed from the other values and the totals. 
-- **Requirement 2**: We need to make sure that it's not possible to exclude some values in the interval [1,T-1]. I.e., for each masked category, all values in the interval need to be possible.
+- **Requirement 2**: We need to make sure that it's not possible to infer that some values in the interval [1,T-1] are not possible for a given category. I.e., for each masked category, all values in the interval need to be theoretically possible.
 
 In this doc: First, I go over requirements 1 and 2 in detail. I explain when they are satisfied and how to check they are satisfied. Second, I explore one solution. I think a function can be written that checks if requirements are satisfied and, if the solution is deemed satisfactory, also apply the solution.
 
@@ -173,7 +174,6 @@ total - 100 - 97
 
 Here you know that the sum of the 6 masked values is 13. All values are 'well masked', i.e., you can't tell for any specific value whether it's 5,4,3,2, or 1. But you are giving away the info that most values are not 5, or 4, or 3. It can be a bit problematic in some edge cases (e.g. there are 10 masked values that add up to 14, you know many values are 1, even if you don't know which ones). 
 
-I'd say we can maybe ignore this problem altogether? 
 
 #### Scenario 3: You may or may not give away some info on the intervals
 
@@ -204,22 +204,21 @@ I think this is equivalent to having an equation with multiple solutions, where 
 Frame the problem as an equation where masked variables are unknown, and ask 'Is there at least one possible solution where the unknown takes the value 1, one where the unknown takes the value 2, one where the unknown takes the value 3... for all possible values and unknowns'. Should be possible to program this, and given restrictions (only positive integers), it shouldn't be too computationally expensive. It may be a bit of a challenge to program this, though.
 
 
-## Recap: Function design and possible solution
+## Recap: Is there any scenario where naive masking is enough?
 
-So far, I have focused on when masking works: under which conditions requirements 1 and 2 are satisfied. The main takeaway is that both requirements can be framed as 'are solutions to some equation possible'. With this, we can work an algorithm of the form:
+Short answer: no.
 
-1. Apply naive masking
-2. Check that, after naive masking, requirements 1 and 2 are satisfied [via appropriate equations and their solutions]
-3. 
+If you naive mask one value only, it will always be possible to compute the value from the total and the other counts.
 
-a) If TRUE, table is fine. Naive masking is enough (or there's no masking). 
-b) If FALSE, table is not fine. We need to do something else.
+If you naive mask two or more values, it will always be possible to exclude some possible combinations of masked values. While it may be impossible, for a given masked value, to exclude its value is 1, 2, 3, or 4, it will always be possible to exclude some combinations of values (i.e., both 1, both 4).
 
-4. Possibly perform solution (note that even if the solution can't be automated, we can still write a function checking the requirements are satisfied, potentially saving a lot of time)
+Oisín and I discussed that we want (typically) is to not be able to exclude any possible combination. Thus, we need a solution. This solution will always imply modifying (interval-masking) one value. We implement the solution below.
 
 ### Possible solutions
 
-If naively you would mask only one value, one solution is to interval-mask an additional value (e.g., the second smallest value). It's easier to reason with an example:
+If naively you would mask only one value, our proposed is to interval-mask an additional value. 
+
+#### Example It's easier to reason with an example:
 
 ```{r}
 cat_value <- c(3, 97, 100)
@@ -227,7 +226,11 @@ total <- sum(cat_value)
 total
 ```
 
-Here, naive masking is not enough. If you mask 3, you know the value from the totals. A possible solution is to 'interval-mask' another value, e.g., 
+Here, naive masking is not enough. If you mask 3, you know the value from the totals. 
+
+#### Solution
+
+Our solution is to 'interval-mask' another value, e.g., 
 
 ```{r}
 c('1-4', '99-96', 100)
@@ -237,10 +240,13 @@ As far as I know (or well, think), this solution can be expanded to all scenario
 
 1. Naive mask.
 
-2. If requirements are not satisfied, interval-mask another value. Assuming the interval of masked variables is [1,4], the interval for the additionally interval-masked value will be:
+2. Interval-mask another value. Assuming the interval of masked variables is [1,4], the interval for the additionally interval-masked value will be:
 
-$$ [N - \sum Unmasked - \# * 1, N - \sum Unmasked - \# * 4] $$
-In words: the value of the total minus the sum of the unmasked values mius the number of masked values * 1 is the upper bound of the interval. Same but using 4 is upper bound of interval.
+$$ [N - \sum Unmasked - \# Masked values * 1, N - \sum Unmasked - \# Masked values * 4] $$
+Important: the number of masked values ($\#$) is computed here as the number of naive masked value + 1 (the interval masked value).
+
+
+In words: the value of the total minus the sum of the unmasked values (excluding the interval masked value) minus the number of masked values * 1 is the upper bound of the interval. Same but using 4 is lower bound of interval.
 
 #### Example
 
@@ -257,7 +263,36 @@ masked.result
 
 Since the total is known (205), you know one value is 100, and all values are possible for the masked values: from all equal to 1 (in which case the interval masked value is 102), to all equal to 4 (in which case the interval-masked value is 93).
 
-NB: Choosing the value to smart-mask can be tricky. I would think it should be the smallest unmasked value, but if it's close to the thresold (e.g., threshold is 6, interval-masked value is 6, the interval could end up being something like, for instance, [4,8], which tells you is definetely not 4 (else it would be masked!)). Choosing this smartly needs some more thought.
+##### Which is the value to mask additionally?
+
+See this slightly modified example.
+```{r}
+cat_value <- c(1,3,4, 7, 100)
+sum(cat_value)
+
+upper.int <- sum(cat_value) - 100 - 3*1
+lower.int <- sum(cat_value) - 100 - 3*4
+
+masked.result <- c('<5', '<5', '<5', paste0('[', lower.int, '-', upper.int, ']'), 100)
+masked.result     
+```
+
+We say the original interval masked value is between 3 and 12. But well, that's impossible, because if it would be 3 or 4 it would be '<5'. This means the interval needs to be really [5-12], from which it is possible to infer something about the naively masked values (in this case, they can't all be 4).
+
+#### Function design
+
+1. Naive mask values lower than 5 (or T)
+2. Interval mask another value, i.e., the smallest possible value.
+3. Check interval is higher than 5 (or T).
+3. a) If TRUE, table is ready.
+3. b) If FALSE, leave the first interval value as it is (i.e.,7), and interval mask the next smallest unmasked value.
+4. Repeat 3 a) and b) until condition 3 is TRUE. If the condition never becomes TRUE (after exhausting all values), then there are two options 1) produce a warning for a human to check, and deem if the released information is enough 2) look for another solution. One solution that works for sure is mask all values. Another solution possibly involves changing thresholds, but it hasn't been worked out yet (while it's likely it should be possible to find a solution).
+5. (Optional, but good check). We can use expand.grid to create all combinations of masked values (for 2 values, the 16 possible combinations of 1-4 for two values, in general the number of such combinations is $T ^ #M-1$ i.e., T to the power of the naive masked values. Then we can check that if we substract N - sum of unmasked  (excluding interval masked) minus sum of the masked values (exxcluding interval masked value), the result is one number in the interval of the masked values. All possible combinations should give a solution within the interval, and there should be no interval value that is not the solution for at least one combination. 
+This should never fail given the formula below, but it's a nice test. Additionally, this is a brute force way of checking requirements and 1 and 2 are satisfied (for requirement 2, understood in a 'strong' sense). 
+
+
+The main takeaway is that both requirements can be framed as 'are solutions to some equation possible'. With this, we can work an algorithm of the form.
+
 
 #### Other solutions
 
