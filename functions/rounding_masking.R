@@ -46,6 +46,8 @@ interval_mask <- function(x,threshold = 5){
   upper.int <- total - sum(is_not_interval_masked) - n_masked*1
   lower.int <- total - sum(is_not_interval_masked) - n_masked*(threshold-1)
   
+  if(lower.int <5) warning('This table may not be safe. Some values, for some categories, could be excluded')
+  
   masked_counts <- ifelse(counts <5, '[1-4]', counts)
   masked_counts <- ifelse(counts == is_interval_masked, 
                           paste0('[',lower.int, '-', upper.int, ']'),
