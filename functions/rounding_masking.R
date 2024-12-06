@@ -30,6 +30,30 @@ mask_count <- function(x, threshold = 5){
   }))
 }
 
+## function to interval_mask vectors
+
+interval_mask <- function(x,threshold = 5){
+  counts <- x
+  total <- sum(counts)
+  is_masked <- ifelse(counts <5, TRUE, FALSE)
+  n_masked <- sum(is_masked)
+  is_possible_interval <- !is_masked
+  potential_interval <- sort(counts[is_possible_interval], decreasing = TRUE)
+  
+  is_interval_masked <- potential_interval[1]
+  is_not_interval_masked <- potential_interval[-1]
+  
+  upper.int <- total - sum(is_not_interval_masked) - n_masked*1
+  lower.int <- total - sum(is_not_interval_masked) - n_masked*(threshold-1)
+  
+  masked_counts <- ifelse(counts <5, '[1-4]', counts)
+  masked_counts <- ifelse(counts == is_interval_masked, 
+                          paste0('[',lower.int, '-', upper.int, ']'),
+                          masked_counts)
+  return(masked_counts)
+  
+}
+
 
 # overall function to mask baseline descriptives coming from DescriptivesTable
 mask_round_descriptives <- function(raw_table, number =5, nsmall =1){
