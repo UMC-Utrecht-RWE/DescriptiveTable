@@ -33,6 +33,7 @@ mask_count <- function(x, threshold = 5){
 ## function to interval_mask vectors
 
 interval_mask <- function(x,threshold = 5){
+  naive_interval <- 1:(threshold - 1)
   counts <- x
   total <- sum(counts)
   is_masked <- ifelse(counts <5, TRUE, FALSE)
@@ -46,12 +47,34 @@ interval_mask <- function(x,threshold = 5){
   upper.int <- total - sum(is_not_interval_masked) - n_masked*1
   lower.int <- total - sum(is_not_interval_masked) - n_masked*(threshold-1)
   
-  if(lower.int <5) warning('This table may not be safe. Some values, for some categories, could be excluded')
+  if(lower.int <5) {
+    excluded_int <- lower.int:(threshold-1)
+    interval_combs <- do.call(expand.grid, replicate(n_masked, naive_interval, simplify = FALSE))
+    
+    interval_combs$sums <- rowSums(interval_combs)
+    
+    excluded_values <- subset(interval_combs, interval_combs$sums %in% excluded_int)[, !names(interval_combs) == 'sums']
+    possible_values <- subset(interval_combs, !interval_combs$sums %in% excluded_int)[, !names(interval_combs) == 'sums']
+    
+    
+    perc_impossible <- paste0((nrow(excluded_values)/nrow(interval_combs))*100, '%')
+    
+    warning(paste0('This table may not be safe. Of all possible combinations of naively masked values, ', 
+                   perc_impossible, 'value combinations can be excluded. You can explore the excluded and the possible values
+                   in the output.'))
+    
+    cat('Here are the combinations of masked values that are not possible')
+    print(excluded_values)
+    cat('Here are the combinations of unmasked values that are not possible')
+    print(possible_values)
+    
+  }
+  
   
   masked_counts <- ifelse(counts <5, '[1-4]', counts)
-  masked_counts <- ifelse(counts == is_interval_masked, 
-                          paste0('[',lower.int, '-', upper.int, ']'),
-                          masked_counts)
+  index_interval_masked <- which(counts == is_interval_masked)[1]
+  masked_counts[index_interval_masked] <- paste0('[',lower.int, '-', upper.int, ']')
+  
   return(masked_counts)
   
 }
