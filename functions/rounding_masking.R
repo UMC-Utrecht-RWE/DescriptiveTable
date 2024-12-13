@@ -32,45 +32,50 @@ mask_count <- function(x, threshold = 5){
 
 ## function to interval_mask vectors
 
+## input: 
+## - x: numeric vector of counts (complete and without NAs)
+## - threshold: number below which to mask counts
+
+## output: character vector with counts below threshold masked + one interval masked value
+
 interval_mask <- function(x,threshold = 5){
-  naive_interval <- 1:(threshold - 1)
+  naive_interval <- 1:(threshold - 1) # equivalent to <5
   counts <- x
   total <- sum(counts)
   is_masked <- ifelse(counts <5, TRUE, FALSE)
   n_masked <- sum(is_masked)
+
+  # choose larger value to be interval masked
   is_possible_interval <- !is_masked
   potential_interval <- sort(counts[is_possible_interval], decreasing = TRUE)
-  
   is_interval_masked <- potential_interval[1]
-  is_not_interval_masked <- potential_interval[-1]
+  is_not_interval_masked <- potential_interval[-1] # store for interval mask bounds
   
+  # calculate interval bounds
   upper.int <- total - sum(is_not_interval_masked) - n_masked*1
   lower.int <- total - sum(is_not_interval_masked) - n_masked*(threshold-1)
   
   if(lower.int <5) {
     excluded_int <- lower.int:(threshold-1)
+    
+    # generate all possible combinations of naively masked values
     interval_combs <- do.call(expand.grid, replicate(n_masked, naive_interval, simplify = FALSE))
-    
+    # check which possible combinations of naively masked values are not possible
     interval_combs$sums <- rowSums(interval_combs)
-    
     excluded_values <- subset(interval_combs, interval_combs$sums %in% excluded_int)[, !names(interval_combs) == 'sums']
     possible_values <- subset(interval_combs, !interval_combs$sums %in% excluded_int)[, !names(interval_combs) == 'sums']
-    
-    
     perc_impossible <- paste0((nrow(excluded_values)/nrow(interval_combs))*100, '%')
     
     warning(paste0('This table may not be safe. Of all possible combinations of naively masked values, ', 
                    perc_impossible, 'value combinations can be excluded. You can explore the excluded and the possible values
                    in the output.'))
-    
     cat('Here are the combinations of masked values that are not possible')
     print(excluded_values)
     cat('Here are the combinations of unmasked values that are not possible')
     print(possible_values)
-    
   }
   
-  
+  # interval mask one additional value
   masked_counts <- ifelse(counts <5, '[1-4]', counts)
   index_interval_masked <- which(counts == is_interval_masked)[1]
   masked_counts[index_interval_masked] <- paste0('[',lower.int, '-', upper.int, ']')
