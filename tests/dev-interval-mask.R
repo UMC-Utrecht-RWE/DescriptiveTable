@@ -1,39 +1,33 @@
-# function to mask vectors
-# number ; below which number to mask counts (typically 5)
-mask_count <- function(x, threshold = 5){
-  unlist(sapply(x, function(s){
-    if(s %in% c("NE","NA",0,NA,NaN,"") | as.numeric(s) < 0 | grepl("<",s)) return(s)
-    if(as.numeric(s) == 0) return(s)
-    if(as.numeric(s) < threshold) return(paste0("<", threshold))
-    if(!as.numeric(s) < threshold) return(sprintf("%1.0f", as.numeric(s)))
-  }))
-}
 
+interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
+  naive_interval <- 1:(threshold - 1) # interval to mask individual counts enforced by daps
+  total <- sum(counts) 
+  naively_masked <- ifelse(counts <5, TRUE, FALSE) # logical, values that will be naively masked
+  n_masked <- sum(naively_masked) # number of masked values
+  not_naively_masked <- !naively_masked # logical, values that are not naively masked
+  # value that will be interval masked
+  interval_masked <- max(counts[not_naively_masked]) # value that will be interval masked
+  ## When two counts have the same value, potentially they both could be interval masked
+  ## Next three lines are necessary to select only one
+  interval_masked_index <- which(counts == interval_masked)[1] # index interval_masked_value (only first one)
+  interval_mask_logical <- rep(FALSE, length(counts)) 
+  interval_mask_logical[interval_masked_index] <- TRUE # Vector where the only TRUE corresponds to index of ONE interval masked value 
+  
+  # Select not_masked_variables
+  not_masked_logical <- not_naively_masked & !interval_mask_logical
+  not_masked <- counts[not_masked_logical]
+  
+  # Create interval using formula in the slides
+  upper.int <- total - sum(not_masked) - n_masked*1
+  lower.int <- total - sum(not_masked) - n_masked*(threshold-1)
 
-interval_mask <- function(x,threshold = 5, output_warnings = TRUE){
-  naive_interval <- 1:(threshold - 1)
-  counts <- x
-  total <- sum(counts)
-  is_masked <- ifelse(counts <5, TRUE, FALSE)
-  n_masked <- sum(is_masked)
-  is_possible_interval <- !is_masked
-  potential_interval <- sort(counts[is_possible_interval], decreasing = TRUE)
-  
-  is_interval_masked <- potential_interval[1]
-  is_not_interval_masked <- potential_interval[-1]
-  
-  upper.int <- total - sum(is_not_interval_masked) - n_masked*1
-  lower.int <- total - sum(is_not_interval_masked) - n_masked*(threshold-1)
-  
   # Apply masking
-  ## For valuess below threshold, just mask
+  ## For values below threshold, just mask
   masked_counts <- ifelse(counts <5, '[1-4]', counts)
   ## For interval masked values, substitute by interval
   ## When there are twe counts that are equal to the count that should be interval masked,
   ## only mask one of them
-  interval_masked_index <- which(counts == is_interval_masked)[1]
   masked_counts[interval_masked_index] <-  paste0('[',lower.int, '-', upper.int, ']')
-
   
   # optional warnings 
   if(output_warnings == TRUE) {
