@@ -56,7 +56,7 @@ popdf <- readRDS("input/example_cohort_dataset.rds")
 tableout <- DescriptivesTable(popdf = popdf,# data object
                   table_metadata = table_metadata, # specification of table
                   groupcol = "group", # name of column in which group membership can be found
-                  output_format = "processed" ,# "processed" or "raw"; raw for debugging only, outputs at earlier step
+                  output_format = "raw" ,# "processed" or "raw"; raw for debugging only, outputs at earlier step
                   calculate_asd = TRUE, # option; calculate asd and add to table or not
                   keep_varinfo = FALSE, # FALSE keeps only the end-labels, TRUE also outputs var names etc.
                   label_lookup = label_lookup,

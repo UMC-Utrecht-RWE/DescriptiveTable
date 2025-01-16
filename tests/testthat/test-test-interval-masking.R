@@ -28,6 +28,15 @@ test_that('interval masking throws warning when lower bound of interval is lower
 }
 )
 
+test_that('interval masking doest not throw warning when warnings are turned off', {
+  
+  count <- c(1,2,3,7)
+  
+  expect_no_warning(interval_mask(count, output_warnings = FALSE))
+  
+}
+)
+
 test_that('interval masking does not throw warning when lower bound of interval is greater than 5', {
   
   count <- c(1,2,3,16)
