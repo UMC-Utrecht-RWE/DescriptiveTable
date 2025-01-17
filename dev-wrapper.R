@@ -50,3 +50,6 @@ return(tableout)
 
 
 tableout_masked <- interval_masking_wrapper(tableout)
+
+waldo::compare(tableout_masked, tableout)
+
