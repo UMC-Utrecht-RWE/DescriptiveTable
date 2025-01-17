@@ -3,9 +3,16 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
   
   ## 1. Identify masked and unmasked values (naively masked and additional interval masked value)
   ## We determine values and positions, useful when masking the vector
-  naively_masked_values <- ifelse(counts < threshold, TRUE, FALSE) # logical, values that will be naively masked
-  not_naively_masked_logical <- !naively_masked_values # logical, values that are not naively masked
+  naively_masked_logical <- ifelse(counts < threshold, TRUE, FALSE) # logical, values that will be naively masked
+  not_naively_masked_logical <- !naively_masked_logical # logical, values that are not naively masked
   
+  # Create vector of masked counts (for storage, modified later)
+  masked_counts <- counts
+  # Compute total count and sums (also useful later)
+  total <- sum(counts) # sum of each category countss
+  n_masked <- sum(naively_masked_logical) # number of masked values
+  
+  if(any(not_naively_masked_logical)) {
   ## We determine which value is interval masked by looking for the largest not-naively masked value
   ## This might not be uniquely defined, as two or more categories could have the same max count
   ## We account for this by selecting only one of those.
@@ -33,29 +40,28 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
   ## I.e., naively masked values - 1
   ## Note that the formula does not use the actual value for the count that is interval masked.
   ## However, by construction, the actual value for the count will *always* fall in this interval
-
+  
   ## Now, we generate the interval
-  total <- sum(counts) # sum of each category countss
-  n_masked <- sum(naively_masked_values) # number of masked values
   theoretical.upper.int <- total - sum(not_masked_values) - n_masked*1
   theoretical.lower.int <- total - sum(not_masked_values) - n_masked*(threshold-1)
   ## 2.1 We know the lower value of the interval is equal or higher to the threshold.
   ## This is because, if the lower value were lower than the threshold, if we have been naively masked and not interval masked!
   ## Thus, the effective lower interval is:
   effective.lower.int <- max(theoretical.lower.int, threshold)
-
-  ## 3. Mask counts according to rules
-  ## 3.1. For values lower than threshold
-  masked_counts <- ifelse(counts < 5, paste0('[1-', (threshold-1), ']'), counts)
-  ## 3.2. For interval masked values
+  ## 3 Mask interval masked variable
   masked_counts[interval_masked_index] <-  paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
   
+  }
+  
+  ## 3. Mask values lower than threshold
+  masked_counts <- ifelse(counts < 5, paste0('[1-', (threshold-1), ']'), masked_counts)
+  
   ## WARNINGS
-  ## Optional, triggered if theoretical lower value of the interval is less than the threshold
+  ## Optional
   ##### Why is the warning triggered? 
   ## Masking implies than values lower than threshold are stated to fall in the interval [1,threshold]
   ## When this masking is repeated for multiple values, one desirable property is that 
-  ## all interval combinations of the masked values are compatible with the masked table
+  ## the masked table (if there's one, also the masked value) is compatible with the masked table
   ## I.e., for two masked values and threshold 5, counts that are compatible with table are all of:
   ## [1,1], [1,2], [1,3], [1,4], [2,1] ... until [4,4]
   ## While this is desirable, this is simply not possible for some tables.
@@ -63,7 +69,8 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
   ## Additionally, it makes explicit which value combinations of the original counts are not compatible
   ## with the masked table
   if(output_warnings == TRUE) {
-    if(theoretical.lower.int < threshold) {
+
+    if ((exists("theoretical.lower.int") && theoretical.lower.int < threshold) | all(naively_masked_logical)) {
       # To understand which values are not possible, recall how intervals are computed
       # Upper value of interval is the value the interval masked count would have taken
       # IF all the naively interval values are equal to 1. By construction, this value is never modified
@@ -80,8 +87,15 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
       # When you make this substraction, the result is the 'remaining' quantity. You can
       # split that remaining across the naively masked values in different ways, but never in 
       # a way that adds up to something that is higher than that value
-      maximum_to_split <- total - sum(not_masked_values) - effective.lower.int
-
+      
+      ## The values that are incompatible with the table are different depending on whether there's one interval masked value
+      ##
+      if(any(not_naively_masked_logical)) {
+      maximum_to_split <- total - sum(not_masked_values) - effective.lower.int}
+      if(all(naively_masked_logical)) {
+      maximum_to_split <- total
+      }
+      
       # 1. Now, create a grid of all the combinations of values in the intervals [1, threshold]
       naive_interval <- 1:(threshold - 1) # interval to mask individual counts enforced by dap
       combinations_grid <- do.call(expand.grid, replicate(n_masked, naive_interval, simplify = FALSE))
@@ -105,7 +119,7 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
       combinations_grid <- combinations_grid[order(combinations_grid$sums),]
       print(combinations_grid)
     }
-  }
+    }
   
   return(masked_counts)
   
@@ -116,8 +130,13 @@ interval_mask(count)
 
 count <- c(1,2,4,6,7)
 interval_mask(count, output_warnings = TRUE)
-interval_mask(count, output_warnings = FALSE)
 
+
+count <- c(1,2,4,2,3)
+interval_mask(count, output_warnings = TRUE)
+
+count <- c(1,2,1,1,1)
+interval_mask(count, output_warnings = TRUE)
 
 threshold <- 5
 lower.int <- 2
