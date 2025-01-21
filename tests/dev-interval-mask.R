@@ -1,5 +1,35 @@
 
-interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
+is_exception <- function(value){
+  ifelse(value %in% c(0, "NE","NA",NA,NaN,"","NR", -66, -77, -88, -99), TRUE,FALSE)
+}
+
+sapply(c(3,4,5, NA, 'NE', NaN, 8, -66), is_exception)
+
+
+
+interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = TRUE){
+  
+  numeric_indices <- !sapply(input_vector, is_exception)
+  counts <- as.numeric(input_vector[numeric_indices])
+  
+  # Compute total count and sums (useful later)
+  total <- sum(counts) # sum of each category counts
+  
+  if(length(counts) == 1){
+    input_vector[numeric_indices] <- ifelse(counts < threshold, below_threshold_sub, counts)
+    input_vector[!numeric_indices] <- input_vector[!numeric_indices]
+    return(input_vector)
+  }
+  if(length(input_vector) == 1 & is_exception(input_vector[1])) return(input_vector)
+  
+  if(percentage){
+    below_threshold_pcn_lower <- (1/total)*100
+    below_threshold_pcn_upper <- ((threshold-1)/total)*100
+    below_threshold_sub <- paste0('[',below_threshold_pcn_lower, '-' , below_threshold_pcn_upper, ']')
+  } else {
+    below_threshold_sub <- paste0('[1-', threshold-1, ']')
+  }
+  
   
   ## 1. Identify masked and unmasked values (naively masked and additional interval masked value)
   ## We determine values and positions, useful when masking the vector
@@ -8,10 +38,8 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
   
   # Create vector of masked counts (for storage, modified later)
   masked_counts <- counts
-  # Compute total count and sums (also useful later)
-  total <- sum(counts) # sum of each category countss
-  n_masked <- sum(naively_masked_logical) # number of masked values
-  
+  n_masked <- sum(naively_masked_logical) # number of masked values, useful later
+    
   if(any(not_naively_masked_logical)) {
   ## We determine which value is interval masked by looking for the largest not-naively masked value
   ## This might not be uniquely defined, as two or more categories could have the same max count
@@ -49,12 +77,22 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
   ## Thus, the effective lower interval is:
   effective.lower.int <- max(theoretical.lower.int, threshold)
   ## 3 Mask interval masked variable
-  masked_counts[interval_masked_index] <-  paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
+  interval_mask_sub <- paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
+  masked_counts[interval_masked_index] <- interval_mask_sub
   
   }
   
   ## 3. Mask values lower than threshold
-  masked_counts <- ifelse(counts < 5, paste0('[1-', (threshold-1), ']'), masked_counts)
+  masked_counts <- ifelse(counts < 5, below_threshold_sub, masked_counts)
+  
+ 
+  effective.lower.int_pcn <- (effective.lower.int/total)*100
+  theoretical.uper.int_pcn <- (theoretical.upper.int/total)*100
+  percentages <- (counts/total)/100
+  
+  
+  input_vector[numeric_indices] <- masked_counts
+  output_vector <- input_vector
   
   ## WARNINGS
   ## Optional
@@ -121,23 +159,34 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
     }
     }
   
-  return(masked_counts)
+  return(output_vector)
   
 }
 
-count <- c(1,2,97,100)
+count <- c(1,2,97, 100)
+interval_mask(count)
+count <- c(1,2,97, NA, 100, 'NE')
+interval_mask(count)
+count <- c(0,1,2,97, NA, 100, 'NE')
 interval_mask(count)
 
 count <- c(1,2,4,6,7)
 interval_mask(count, output_warnings = TRUE)
 
-
+count <- c(3)
+interval_mask(count)
+count <- c(97)
+interval_mask(count)
+count <- c(NA, 3, -66)
+interval_mask(count)
 count <- c(1,2,4,2,3)
 interval_mask(count, output_warnings = TRUE)
 
-count <- c(1,2,1,1,1)
+count <- c(0,2,1,1,1)
 interval_mask(count, output_warnings = TRUE)
 
+counts <- c(0,8,3,9)
+interval_mask(counts)
 threshold <- 5
 lower.int <- 2
 n_masked <- 3
