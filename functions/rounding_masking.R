@@ -23,7 +23,7 @@ round_vec <- function(x, nsmall = 1){
 # number ; below which number to mask counts (typically 5)
 mask_count <- function(x, threshold = 5){
   unlist(sapply(x, function(s){
-    if(s %in% c("NE","NA",0,NA,NaN,"") | as.numeric(s) < 0 | grepl("<",s)) return(s)
+    if(s %in% c("NE","NA",0,NA,NaN,"") | as.numeric(s) < 0 | grepl("<",s)) return(s) #-66, -77, -88, -99 should also be considered
     if(as.numeric(s) == 0) return(s)
     if(as.numeric(s) < threshold) return(paste0("<", threshold))
     if(!as.numeric(s) < threshold) return(sprintf("%1.0f", as.numeric(s)))
@@ -39,7 +39,35 @@ mask_count <- function(x, threshold = 5){
 
 ## output: character vector with counts below threshold masked + one interval masked value
 
-interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
+interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = FALSE){
+  
+  # Flag non-zero numeric index. Function only works with those,
+  # and leaves all exceptions (including zero) unchanged.
+  numeric_indices <- !sapply(input_vector, is_exception)
+  # Store non-zero numeric values
+  counts <- as.numeric(input_vector[numeric_indices])
+  # Compute total counts, useful at different stages
+  total <- sum(counts) # sum of each numerical category counts
+  
+  # Handle input of length 1 (i.e. one cat or TF)
+  ## If the input is non_numeric, left as is
+  if(length(input_vector) == 1 & is_exception(input_vector[1])) return(input_vector)
+  ## If there is one non-zero numeric count, naive mask
+  ## (works even if input vector is of size >1 for NA, etc)
+  if(length(counts) == 1){
+    input_vector[numeric_indices] <- ifelse(counts < threshold, below_threshold_sub, counts)
+    input_vector[!numeric_indices] <- input_vector[!numeric_indices]
+    return(input_vector)
+  }
+  
+  # String to replace masked values, different depending if outcome is percentage or raw
+  if(percentage){
+    below_threshold_pcn_lower <- (1/total)*100
+    below_threshold_pcn_upper <- ((threshold-1)/total)*100
+    below_threshold_sub <- paste0('[',below_threshold_pcn_lower, '-' , below_threshold_pcn_upper, ']')
+  } else {
+    below_threshold_sub <- paste0('[1-', threshold-1, ']')
+  }
   
   ## 1. Identify masked and unmasked values (naively masked and additional interval masked value)
   ## We determine values and positions, useful when masking the vector
@@ -47,10 +75,14 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
   not_naively_masked_logical <- !naively_masked_logical # logical, values that are not naively masked
   
   # Create vector of masked counts (for storage, modified later)
-  masked_counts <- counts
-  # Compute total count and sums (also useful later)
-  total <- sum(counts) # sum of each category countss
-  n_masked <- sum(naively_masked_logical) # number of masked values
+  if(percentage==TRUE){
+    masked_counts <- (counts/total)*100
+  } else {
+    masked_counts <- counts
+  }
+  
+  
+  n_masked <- sum(naively_masked_logical) # number of masked values, useful later
   
   if(any(not_naively_masked_logical)) {
     ## We determine which value is interval masked by looking for the largest not-naively masked value
@@ -89,12 +121,23 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
     ## Thus, the effective lower interval is:
     effective.lower.int <- max(theoretical.lower.int, threshold)
     ## 3 Mask interval masked variable
-    masked_counts[interval_masked_index] <-  paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
+    if(percentage == TRUE){
+      interval_mask_sub_lower <- (effective.lower.int/total)*100
+      interval_mask_sub_upper <- (theoretical.upper.int/total)*100
+      interval_mask_sub <- paste0('[', interval_mask_sub_lower, '-', interval_mask_sub_upper, ']')
+    } else {
+      interval_mask_sub <- paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
+    }
+    
+    masked_counts[interval_masked_index] <- interval_mask_sub
     
   }
   
   ## 3. Mask values lower than threshold
-  masked_counts <- ifelse(counts < 5, paste0('[1-', (threshold-1), ']'), masked_counts)
+  masked_counts <- ifelse(counts < 5, below_threshold_sub, masked_counts)
+  
+  input_vector[numeric_indices] <- masked_counts
+  output_vector <- input_vector
   
   ## WARNINGS
   ## Optional
@@ -161,7 +204,7 @@ interval_mask <- function(counts, threshold = 5, output_warnings = TRUE){
     }
   }
   
-  return(masked_counts)
+  return(output_vector)
   
 }
 
@@ -169,10 +212,7 @@ interval_masking_wrapper <- function(tableout, threshold = 5, output_warnings = 
   # 1. Filter applicable variable types
   tableout_cat <- tableout %>% 
     as.data.frame() %>% 
-    filter(type != 'NUM1',
-           type != 'TF', # WARNING: WILL need to be handled
-           var != 'Total')
-  
+    filter(type %in% c('CAT', 'TF'))
   # 2. Obtain unique categories
   categories <- unique(tableout_cat$var)
   
@@ -184,20 +224,24 @@ interval_masking_wrapper <- function(tableout, threshold = 5, output_warnings = 
     tableout_reduced <- tableout_cat[tableout_cat$var == cat,]
     
     # Extract control and exposed vector
-    v1_control <- as.numeric(tableout_reduced$V1_CONTROL)
-    v1_exposed <- as.numeric(tableout_reduced$V1_EXPOSED)
+    v1_control_raw <- as.numeric(tableout_reduced$V1_CONTROL)
+    v1_exposed_raw <- as.numeric(tableout_reduced$V1_EXPOSED)
     
     # Apply interval mask function
-    mask_v1_control <- interval_mask(v1_control, threshold = threshold, output_warnings = output_warnings)
-    mask_v1_exposed <- interval_mask(v1_exposed, threshold = threshold, output_warnings = output_warnings)
+    mask_v1_control_raw <- interval_mask(v1_control_raw, threshold = threshold, output_warnings = output_warnings)
+    mask_v1_exposed_raw <- interval_mask(v1_exposed_raw, threshold = threshold, output_warnings = output_warnings)
+    mask_v1_control_pcn <- interval_mask(v1_control_raw, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
+    mask_v1_exposed_pcn <- interval_mask(v1_exposed_raw, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
     
     # Get row indices of first and last ocurrence
     first_index <- which(tableout$var == cat)[1]
     last_index <- tail(which(tableout$var == cat), n = 1)
     
     # Replace appropriate rows and columns, based on index and column name
-    tableout[first_index:last_index, 'V1_CONTROL'] <- mask_v1_control
-    tableout[first_index:last_index, 'V1_EXPOSED'] <- mask_v1_exposed
+    tableout[first_index:last_index, 'V1_CONTROL'] <- mask_v1_control_raw
+    tableout[first_index:last_index, 'V1_EXPOSED'] <- mask_v1_exposed_raw
+    tableout[first_index:last_index, 'V2_CONTROL'] <- mask_v1_control_pcn
+    tableout[first_index:last_index, 'V2_EXPOSED'] <- mask_v1_exposed_pcn
   }
   
   return(tableout)
