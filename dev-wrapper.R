@@ -13,10 +13,7 @@ interval_masking_wrapper <- function(tableout, threshold = 5, output_warnings = 
 # 1. Filter applicable variable types
 tableout_cat <- tableout %>% 
   as.data.frame() %>% 
-  filter(type != 'NUM1',
-         type != 'TF', # WARNING: WILL need to be handled
-         var != 'Total')
-
+  filter(type %in% c('CAT', 'TF'))
 # 2. Obtain unique categories
 categories <- unique(tableout_cat$var)
 
