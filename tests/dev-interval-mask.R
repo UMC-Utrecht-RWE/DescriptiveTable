@@ -7,21 +7,28 @@ sapply(c(3,4,5, NA, 'NE', NaN, 8, -66), is_exception)
 
 
 
-interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = TRUE){
+interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = FALSE){
   
+  # Flag non-zero numeric index. Function only works with those,
+  # and leaves all exceptions (including zero) unchanged.
   numeric_indices <- !sapply(input_vector, is_exception)
+  # Store non-zero numeric values
   counts <- as.numeric(input_vector[numeric_indices])
+  # Compute total counts, useful at different stages
+  total <- sum(counts) # sum of each numerical category counts
   
-  # Compute total count and sums (useful later)
-  total <- sum(counts) # sum of each category counts
-  
+  # Handle input of length 1 (i.e. one cat or TF)
+  ## If the input is non_numeric, left as is
+  if(length(input_vector) == 1 & is_exception(input_vector[1])) return(input_vector)
+  ## If there is one non-zero numeric count, naive mask
+  ## (works even if input vector is of size >1 for NA, etc)
   if(length(counts) == 1){
     input_vector[numeric_indices] <- ifelse(counts < threshold, below_threshold_sub, counts)
     input_vector[!numeric_indices] <- input_vector[!numeric_indices]
     return(input_vector)
   }
-  if(length(input_vector) == 1 & is_exception(input_vector[1])) return(input_vector)
-  
+
+  # String to replace masked values, different depending if outcome is percentage or raw
   if(percentage){
     below_threshold_pcn_lower <- (1/total)*100
     below_threshold_pcn_upper <- ((threshold-1)/total)*100
@@ -30,14 +37,19 @@ interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, p
     below_threshold_sub <- paste0('[1-', threshold-1, ']')
   }
   
-  
   ## 1. Identify masked and unmasked values (naively masked and additional interval masked value)
   ## We determine values and positions, useful when masking the vector
   naively_masked_logical <- ifelse(counts < threshold, TRUE, FALSE) # logical, values that will be naively masked
   not_naively_masked_logical <- !naively_masked_logical # logical, values that are not naively masked
   
   # Create vector of masked counts (for storage, modified later)
-  masked_counts <- counts
+  if(percentage==TRUE){
+    masked_counts <- (counts/total)*100
+  } else {
+    masked_counts <- counts
+  }
+  
+  
   n_masked <- sum(naively_masked_logical) # number of masked values, useful later
     
   if(any(not_naively_masked_logical)) {
@@ -77,19 +89,20 @@ interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, p
   ## Thus, the effective lower interval is:
   effective.lower.int <- max(theoretical.lower.int, threshold)
   ## 3 Mask interval masked variable
+  if(percentage == TRUE){
+    interval_mask_sub_lower <- (effective.lower.int/total)*100
+    interval_mask_sub_upper <- (theoretical.upper.int/total)*100
+    interval_mask_sub <- paste0('[', interval_mask_sub_lower, '-', interval_mask_sub_upper, ']')
+  } else {
   interval_mask_sub <- paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
+  }
+  
   masked_counts[interval_masked_index] <- interval_mask_sub
   
   }
   
   ## 3. Mask values lower than threshold
   masked_counts <- ifelse(counts < 5, below_threshold_sub, masked_counts)
-  
- 
-  effective.lower.int_pcn <- (effective.lower.int/total)*100
-  theoretical.uper.int_pcn <- (theoretical.upper.int/total)*100
-  percentages <- (counts/total)/100
-  
   
   input_vector[numeric_indices] <- masked_counts
   output_vector <- input_vector
@@ -164,6 +177,9 @@ interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, p
 }
 
 count <- c(1,2,97, 100)
+count <- c(1,2,97, 100)
+interval_mask(count)
+interval_mask(count, percentage = TRUE)
 interval_mask(count)
 count <- c(1,2,97, NA, 100, 'NE')
 interval_mask(count)
