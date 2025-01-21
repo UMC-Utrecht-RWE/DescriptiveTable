@@ -28,20 +28,24 @@ for(i in seq_along(categories)){
   tableout_reduced <- tableout_cat[tableout_cat$var == cat,]
 
   # Extract control and exposed vector
-  v1_control <- as.numeric(tableout_reduced$V1_CONTROL)
-  v1_exposed <- as.numeric(tableout_reduced$V1_EXPOSED)
+  v1_control_raw <- as.numeric(tableout_reduced$V1_CONTROL)
+  v1_exposed_raw <- as.numeric(tableout_reduced$V1_EXPOSED)
 
   # Apply interval mask function
-  mask_v1_control <- interval_mask(v1_control, threshold = threshold, output_warnings = output_warnings)
-  mask_v1_exposed <- interval_mask(v1_exposed, threshold = threshold, output_warnings = output_warnings)
+  mask_v1_control_raw <- interval_mask(v1_control_raw, threshold = threshold, output_warnings = output_warnings)
+  mask_v1_exposed_raw <- interval_mask(v1_exposed_raw, threshold = threshold, output_warnings = output_warnings)
+  mask_v1_control_pcn <- interval_mask(v1_control_raw, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
+  mask_v1_exposed_pcn <- interval_mask(v1_exposed_raw, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
 
   # Get row indices of first and last ocurrence
   first_index <- which(tableout$var == cat)[1]
   last_index <- tail(which(tableout$var == cat), n = 1)
   
   # Replace appropriate rows and columns, based on index and column name
-  tableout[first_index:last_index, 'V1_CONTROL'] <- mask_v1_control
-  tableout[first_index:last_index, 'V1_EXPOSED'] <- mask_v1_exposed
+  tableout[first_index:last_index, 'V1_CONTROL'] <- mask_v1_control_raw
+  tableout[first_index:last_index, 'V1_EXPOSED'] <- mask_v1_exposed_raw
+  tableout[first_index:last_index, 'V2_CONTROL'] <- mask_v1_control_pcn
+  tableout[first_index:last_index, 'V2_EXPOSED'] <- mask_v1_exposed_pcn
   }
   
 return(tableout)
