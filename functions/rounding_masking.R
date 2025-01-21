@@ -19,6 +19,7 @@ round_vec <- function(x, nsmall = 1){
   })
 }
 
+#@TO-DO: Should be deleted???
 # function to mask vectors
 # number ; below which number to mask counts (typically 5)
 mask_count <- function(x, threshold = 5){
@@ -39,7 +40,21 @@ mask_count <- function(x, threshold = 5){
 
 ## output: character vector with counts below threshold masked + one interval masked value
 
-interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = FALSE){
+#' Interval mask one vector
+#' 
+#' Inputs a vector of categorical counts. Returns the masked version of categorical counts.
+#' Concretely, it masks a) if there is any, all values below the threshold and 2) if any value is higher than the threshold, the largest of those.
+#' 
+#' @param input_vector A vector of category counts, possibly including special values such as NA, NE, etc. Can be numeric or character vector.
+#' @param threshold Numeric. Threshold below which values need to be masked, determined externally
+#' @param output_warnings Logical. Should warning be issued displaying which value combinations are not possible?
+#' @param percentage Logical. Should output be raw masked vector, of percentages based vector
+#'
+#' @returns If no masking is needed, the original vector or its percentage version. If masking is needed, the masked counterpart and its percentage version.
+#' @export
+#'
+#' @examples
+mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = FALSE){
   
   # Flag non-zero numeric index. Function only works with those,
   # and leaves all exceptions (including zero) unchanged.
@@ -208,7 +223,17 @@ interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, p
   
 }
 
-interval_masking_wrapper <- function(tableout, threshold = 5, output_warnings = FALSE){
+#' Interval mask a tableout
+#'
+#' @param tableout Table 1 output as outputted by the function DescriptivesTable
+#' @param threshold Numeric. Threshold below which values need to be masked, determined externally
+#' @param output_warnings Logical. Should warning be issued displaying which value combinations are not possible?
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+mask_vector_wrapper <- function(tableout, threshold = 5, output_warnings = FALSE){
   # 1. Filter applicable variable types
   tableout_cat <- tableout %>% 
     as.data.frame() %>% 
@@ -228,10 +253,10 @@ interval_masking_wrapper <- function(tableout, threshold = 5, output_warnings = 
     v1_exposed_raw <- as.numeric(tableout_reduced$V1_EXPOSED)
     
     # Apply interval mask function
-    mask_v1_control_raw <- interval_mask(v1_control_raw, threshold = threshold, output_warnings = output_warnings)
-    mask_v1_exposed_raw <- interval_mask(v1_exposed_raw, threshold = threshold, output_warnings = output_warnings)
-    mask_v1_control_pcn <- interval_mask(v1_control_raw, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
-    mask_v1_exposed_pcn <- interval_mask(v1_exposed_raw, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
+    mask_v1_control_raw <- mask_vector(v1_control_raw, threshold = threshold, output_warnings = output_warnings)
+    mask_v1_exposed_raw <- mask_vector(v1_exposed_raw, threshold = threshold, output_warnings = output_warnings)
+    mask_v1_control_pcn <- mask_vector(v1_control_raw, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
+    mask_v1_exposed_pcn <- mask_vector(v1_exposed_raw, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
     
     # Get row indices of first and last ocurrence
     first_index <- which(tableout$var == cat)[1]
