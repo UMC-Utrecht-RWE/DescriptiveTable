@@ -32,7 +32,7 @@ source("functions/asd_functions.R")
 source("functions/DescriptivesTable.R")
 
 # additional function to mask/round numeric vectors to strings
-source("functions/rounding_masking.R")
+source("functions/masking-functions.R")
 
 # load helper information on what variables are expected to be missing in the DAP
 ExpectedMissingVars <- data.table::fread("input/ExpectedMissingVariables.csv")

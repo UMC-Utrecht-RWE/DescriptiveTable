@@ -83,6 +83,7 @@ test_that('special values are correctly handled', {
   count <- c(3, 97, 100)
   masked_count <- c("[1-4]", "97","[99-102]")
   
+  # One count needs to be masked and there's a zero
   count <- c(3, 97, 0, 100)
   masked_count <- c("[1-4]", "97",0,"[99-102]")
   expect_equal(mask_vector(count), masked_count)
@@ -96,5 +97,13 @@ test_that('special values are correctly handled', {
   result <- unname(sapply(count, is_exception))
   expect_equal(result, c(T,F,F,T,T,T,F,T,T,T,T,T,T))
 
+})
+
+test_that('counts of length 1 are correctly handed',{
+  expect_equal(mask_vector(3), '[1-4]')
+  expect_equal(mask_vector(c(NA)), NA)
+  expect_equal(mask_vector(c(3, 'NE', NaN, -66)), c('[1-4]', 'NE', NaN, -66))
+  expect_equal(mask_vector(1), '[1-4]')
+  expect_equal(mask_vector(1, percentage = NA))
 })
 
