@@ -31,14 +31,19 @@ mask_count <- function(x, threshold = 5){
   }))
 }
 
-## function to interval_mask vectors
 
-## input: 
-## - x: numeric vector of counts (complete and without NAs)
-## - threshold: number below which to mask counts
-## - output warnings: logical whether warnings should or should not be in the output
+#' Check if a category value is a count or an exception (helper function)
+#'
+#' @param value Value the category count shows
+#'
+#' @returns a logical indicating whether the value is one of the exceptions. If FALSE, the value returned is 
+#' @export
+#'
+#' @examples
+is_exception <- function(value){
+  ifelse(value %in% c(0, "NE","NA",NA,NaN,"","NR", -66, -77, -88, -99), TRUE,FALSE)
+}
 
-## output: character vector with counts below threshold masked + one interval masked value
 
 #' Interval mask one vector
 #' 
@@ -64,6 +69,21 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
   # Compute total counts, useful at different stages
   total <- sum(counts) # sum of each numerical category counts
   
+  
+  
+  # String to replace masked values, different depending if outcome is percentage or raw
+  if(percentage){
+    below_threshold_pcn_lower <- (1/total)*100
+    below_threshold_pcn_upper <- ((threshold-1)/total)*100
+    below_threshold_sub <- paste0('[',below_threshold_pcn_lower, '-' , below_threshold_pcn_upper, ']')
+  } else {
+    below_threshold_sub <- paste0('[1-', threshold-1, ']')
+  }
+  
+  
+
+  
+  
   # Handle input of length 1 (i.e. one cat or TF)
   ## If the input is non_numeric, left as is
   if(length(input_vector) == 1 & is_exception(input_vector[1])) return(input_vector)
@@ -75,14 +95,7 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
     return(input_vector)
   }
   
-  # String to replace masked values, different depending if outcome is percentage or raw
-  if(percentage){
-    below_threshold_pcn_lower <- (1/total)*100
-    below_threshold_pcn_upper <- ((threshold-1)/total)*100
-    below_threshold_sub <- paste0('[',below_threshold_pcn_lower, '-' , below_threshold_pcn_upper, ']')
-  } else {
-    below_threshold_sub <- paste0('[1-', threshold-1, ']')
-  }
+  
   
   ## 1. Identify masked and unmasked values (naively masked and additional interval masked value)
   ## We determine values and positions, useful when masking the vector
@@ -99,7 +112,7 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
   
   n_masked <- sum(naively_masked_logical) # number of masked values, useful later
   
-  if(any(not_naively_masked_logical)) {
+  if(any(not_naively_masked_logical & !all(not_naively_masked_logical))) {
     ## We determine which value is interval masked by looking for the largest not-naively masked value
     ## This might not be uniquely defined, as two or more categories could have the same max count
     ## We account for this by selecting only one of those.
@@ -149,7 +162,7 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
   }
   
   ## 3. Mask values lower than threshold
-  masked_counts <- ifelse(counts < 5, below_threshold_sub, masked_counts)
+  masked_counts <- ifelse(counts < threshold, below_threshold_sub, masked_counts)
   
   input_vector[numeric_indices] <- masked_counts
   output_vector <- input_vector

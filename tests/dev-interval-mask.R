@@ -1,13 +1,6 @@
 
-is_exception <- function(value){
-  ifelse(value %in% c(0, "NE","NA",NA,NaN,"","NR", -66, -77, -88, -99), TRUE,FALSE)
-}
 
-sapply(c(3,4,5, NA, 'NE', NaN, 8, -66), is_exception)
-
-
-
-interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = FALSE){
+mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = FALSE){
   
   # Flag non-zero numeric index. Function only works with those,
   # and leaves all exceptions (including zero) unchanged.
@@ -56,14 +49,14 @@ interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, p
   ## We determine which value is interval masked by looking for the largest not-naively masked value
   ## This might not be uniquely defined, as two or more categories could have the same max count
   ## We account for this by selecting only one of those.
-  interval_masked_value <- max(counts[not_naively_masked_logical]) # maximum value among not naively masked
-  interval_masked_index <- which(counts == interval_masked_value)[1] # get index of first category count equal to maximum value (might be only one)
+  mask_vectored_value <- max(counts[not_naively_masked_logical]) # maximum value among not naively masked
+  mask_vectored_index <- which(counts == mask_vectored_value)[1] # get index of first category count equal to maximum value (might be only one)
   ## Generate logical indicating which value is the one interval masked 
-  interval_mask_logical <- rep(FALSE, length(counts)) ## Generate logical with all FALSE as placeholder
-  interval_mask_logical[interval_masked_index] <- TRUE # Vector where the only TRUE corresponds to index of ONE interval masked value 
+  mask_vector_logical <- rep(FALSE, length(counts)) ## Generate logical with all FALSE as placeholder
+  mask_vector_logical[mask_vectored_index] <- TRUE # Vector where the only TRUE corresponds to index of ONE interval masked value 
   
   ## Logical indicating which values are neither naively masked not interval masked
-  not_masked_logical <- not_naively_masked_logical & !interval_mask_logical
+  not_masked_logical <- not_naively_masked_logical & !mask_vector_logical
   ## Vector of values from non-masked categories
   not_masked_values <- counts[not_masked_logical]
   
@@ -90,14 +83,14 @@ interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, p
   effective.lower.int <- max(theoretical.lower.int, threshold)
   ## 3 Mask interval masked variable
   if(percentage == TRUE){
-    interval_mask_sub_lower <- (effective.lower.int/total)*100
-    interval_mask_sub_upper <- (theoretical.upper.int/total)*100
-    interval_mask_sub <- paste0('[', interval_mask_sub_lower, '-', interval_mask_sub_upper, ']')
+    mask_vector_sub_lower <- (effective.lower.int/total)*100
+    mask_vector_sub_upper <- (theoretical.upper.int/total)*100
+    mask_vector_sub <- paste0('[', mask_vector_sub_lower, '-', mask_vector_sub_upper, ']')
   } else {
-  interval_mask_sub <- paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
+  mask_vector_sub <- paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
   }
   
-  masked_counts[interval_masked_index] <- interval_mask_sub
+  masked_counts[mask_vectored_index] <- mask_vector_sub
   
   }
   
@@ -176,49 +169,6 @@ interval_mask <- function(input_vector, threshold = 5, output_warnings = TRUE, p
   
 }
 
-count <- c(1,2,97, 100)
-count <- c(1,2,97, 100)
-interval_mask(count)
-interval_mask(count, percentage = TRUE)
-interval_mask(count)
-count <- c(1,2,97, NA, 100, 'NE')
-interval_mask(count)
-count <- c(0,1,2,97, NA, 100, 'NE')
-interval_mask(count)
 
-count <- c(1,2,4,6,7)
-interval_mask(count, output_warnings = TRUE)
-
-count <- c(3)
-interval_mask(count)
-count <- c(97)
-interval_mask(count)
-count <- c(NA, 3, -66)
-interval_mask(count)
-count <- c(1,2,4,2,3)
-interval_mask(count, output_warnings = TRUE)
-
-count <- c(0,2,1,1,1)
-interval_mask(count, output_warnings = TRUE)
-
-counts <- c(0,8,3,9)
-interval_mask(counts)
-threshold <- 5
-lower.int <- 2
-n_masked <- 3
-naive_interval <- 1:4
-
-excluded_int <- lower.int:(threshold-1)
-grid <- do.call(expand.grid, replicate(n_masked, naive_interval, simplify = FALSE))
-
-grid$sums <- rowSums(grid)
-
-excluded_values <- subset(grid, grid$sums %in% excluded_int)[, !names(grid) == 'sums']
-possible_values <- subset(grid, !grid$sums %in% excluded_int)[, !names(grid) == 'sums']
-
-print(excluded_values)
-print(possible_values)
-
-perc_impossible <- nrow(excluded_values)/nrow(grid)
 
 
