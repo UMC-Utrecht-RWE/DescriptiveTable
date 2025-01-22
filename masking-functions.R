@@ -1,42 +1,9 @@
-# function to round vectors
-# nsmall is the number of digits for rounding, returns a character string
-round_vec <- function(x, nsmall = 1){
-  sapply(x, function(s){
-    # check if exactly zero
-    if(s %in% c("NE","NA",NA,NaN,"","NR")) return(s)
-    s <- as.numeric(s)
-    if(s == 0) return(paste0("0", ifelse(nsmall >0, ".",""), paste0(rep("0", nsmall), collapse = "")))
-    # if not, round and then check if rounded value approx 0
-    rounded_value <- round(s, nsmall)
-    rounded_string <- formatC(rounded_value, format = "f", digits = nsmall)
-    
-    if (rounded_string == paste0("0", ifelse(nsmall >0, ".",""), paste0(rep("0", nsmall), collapse = "")) |
-        rounded_string == paste0("-0", ifelse(nsmall >0, ".",""), paste0(rep("0", nsmall), collapse = ""))) {
-      return(paste0("<0",ifelse(nsmall >0, ".",""),paste0(rep("0", nsmall-1),"1",collapse = "")))
-    } else {
-      return(rounded_string)
-    }
-  })
-}
-
-#@TO-DO: Should be deleted???
-# function to mask vectors
-# number ; below which number to mask counts (typically 5)
-mask_count <- function(x, threshold = 5){
-  unlist(sapply(x, function(s){
-    if(s %in% c("NE","NA",0,NA,NaN,"") | as.numeric(s) < 0 | grepl("<",s)) return(s) #-66, -77, -88, -99 should also be considered
-    if(as.numeric(s) == 0) return(s)
-    if(as.numeric(s) < threshold) return(paste0("<", threshold))
-    if(!as.numeric(s) < threshold) return(sprintf("%1.0f", as.numeric(s)))
-  }))
-}
-
-
-#' Check if a category value is a count or an exception (helper function)
+#' Helper: check if a category value is a valid count or an exception value
 #'
-#' @param value Value the category count shows
+#' @param value Category count or corresponding exception value
 #'
-#' @returns a logical indicating whether the value is one of the exceptions. If FALSE, the value returned is 
+#' @returns Logical indicating whether the value is within the exception values.
+#' If TRUE, category count is not a positive interger, and thus is not subject to matching. If FALSE, the value is a proper count that may be subject to masking.
 #' @export
 #'
 #' @examples
@@ -45,17 +12,18 @@ is_exception <- function(value){
 }
 
 
-#' Interval mask one vector
+#' Mask one vector.
 #' 
-#' Inputs a vector of categorical counts. Returns the masked version of categorical counts.
-#' Concretely, it masks a) if there is any, all values below the threshold and 2) if any value is higher than the threshold, the largest of those.
+#' Inputs a vector of categorical counts. Returns the masked version of the input. Ignores exceptions.
+#' Concretely, it masks a) if there is any, all values below the threshold and 2) if any value is higher than the threshold, the largest of those, according to prespecified rules.
 #' 
-#' @param input_vector A vector of category counts, possibly including special values such as NA, NE, etc. Can be numeric or character vector.
-#' @param threshold Numeric. Threshold below which values need to be masked, determined externally
-#' @param output_warnings Logical. Should warning be issued displaying which value combinations are not possible?
-#' @param percentage Logical. Should output be raw masked vector, of percentages based vector
+#' @param input_vector Numeric or character vector of category counts, possibly including special values such as NA, NE, etc. 
+#' @param threshold Numeric. Threshold below which values need to be masked, externally determined.
+#' @param output_warnings Logical. Should warning be issued displaying which value combinations are not possible, if any?
+#' @param percentage Logical. Should output be raw numbers or corresponding percentages?
 #'
-#' @returns If no masking is needed, the original vector or its percentage version. If masking is needed, the masked counterpart and its percentage version.
+#' @returns If no masking is needed, the original vector or its percentage version. If masking is needed, the masked counterpart or its percentage version.
+#' 
 #' @export
 #'
 #' @examples
@@ -70,7 +38,6 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
   total <- sum(counts) # sum of each numerical category counts
   
   
-  
   # String to replace masked values, different depending if outcome is percentage or raw
   if(percentage){
     below_threshold_pcn_lower <- (1/total)*100
@@ -81,7 +48,7 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
   }
   
   
-
+  
   
   
   # Handle input of length 1 (i.e. one cat or TF)
@@ -285,60 +252,3 @@ mask_vector_wrapper <- function(tableout, threshold = 5, output_warnings = FALSE
   return(tableout)
   
 }
-
-# overall function to mask baseline descriptives coming from DescriptivesTable
-mask_round_descriptives <- function(raw_table, number =5, nsmall =1){
-  
-  raw_table <- as.data.frame(raw_table)
-  # first, identify which rows contain counts
-  count_rows <- which(!raw_table$cat %in% c("STATS1","STATS2"))
-  stats_rows <- which(raw_table$cat %in% c("STATS1","STATS2"))
-  
-  # now identify which columns contain counts and percentages (always come in pairs)
-  count_cols <- grep("V1", names(raw_table), value = T)
-  count_perc <- grep("V2", names(raw_table), value = T)
-  aux_cols <- grep("V3", names(raw_table), value = T)
-  
-  # loop over columns masking appropriately
-  for(i in 1:length(count_cols)){
-    # now identify which of these contain rows that should be masked
-    to_be_masked <- raw_table[count_rows,count_cols[i]] <5 &
-      raw_table[count_rows,count_cols[i]] >0 &
-      !is.na(raw_table[count_rows,count_cols[i]])
-    
-    # grab row numbers
-    to_be_masked <- count_rows[to_be_masked]
-    # mask those counts
-    raw_table[to_be_masked,count_cols[i]] <- mask_count(raw_table[to_be_masked,count_cols[i]])
-    # mask percentage too
-    raw_table[to_be_masked,count_perc[i]] <- "NR"
-    rm(to_be_masked)
-  }
-  
-  # now apply rounding as appropriate
-  for(i in 1:length(count_cols)){
-    # means and sds,etc., rounded to 2 decimal places
-    raw_table[stats_rows,count_cols[i]] <-  round_vec(raw_table[stats_rows,count_cols[i]],2)
-    
-    # percentages rounded to 2 decimal places
-    raw_table[count_rows,count_perc[i]] <-  round_vec(raw_table[count_rows,count_perc[i]],2)
-  }
-  
-  # apply roudning to aux columns
-  for(i in 1:length(aux_cols)){
-    raw_table[stats_rows,aux_cols[i]] <- round_vec(raw_table[stats_rows,aux_cols[i]],2)
-  }
-  
-  # if asd reported, round appropriately
-  if(any(grepl("asd",colnames(raw_table)))){
-    asd_col <- grep("asd",colnames(raw_table), value = T)
-    raw_table[,asd_col] <- round_vec(raw_table[,asd_col],3)
-    # for asd_1 margaret also makes a special request to never display 0.000, so let's hard-code that in
-    recode_vals <- which(raw_table[,asd_col] == "0.000")
-    raw_table[,asd_col][recode_vals] <- "<0.001"
-  }
-  
-  return(raw_table)
-  
-}
-

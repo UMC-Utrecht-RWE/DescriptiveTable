@@ -22,7 +22,6 @@ test_that("masking a numerical vector returns correct output", {
   expect_equal(mask_vector(c(1,2,6,3), threshold = 7, output_warnings = F), c('[1-6]', '[1-6]', '[1-6]', '[1-6]'))
   expect_equal(mask_vector(c(0, 1,2,1,1), threshold = 7, output_warnings = F), c(0,'[1-6]', '[1-6]', '[1-6]', '[1-6]'))
   
-  
   # No count needs to be masked
   expect_equal(mask_vector(c(6, 97, 100)), c(6,97,100))
 })
@@ -71,6 +70,11 @@ test_that('if specified, masking a vector returns a (correct) percentage',{
   largeint <- paste0('[', largeint.lower.bound, '-', largeint.upper.bound, ']')
   
   percentages <- c(naive.interval, naive.interval, 100*(99/total), 100*(102/total), largeint)
+  expect_equal(mask_vector(count, threshold = 7, percentage = TRUE), percentages)
+  
+  # also works with special values
+  count <- c(0, 3,4, NA, 99, 102, 'NE', 104, NaN)
+  percentages <- c(0, naive.interval, naive.interval, NA, 100*(99/total), 100*(102/total), 'NE', largeint, NaN)
   expect_equal(mask_vector(count, threshold = 7, percentage = TRUE), percentages)
 })
 
