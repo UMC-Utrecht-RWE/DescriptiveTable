@@ -1,7 +1,16 @@
-# A series of functions which compute counts for different variable types
-# these functions are called when creating baseline descriptive tables
-# different functions are called depending on the variable type assigned in a meta-data file
+# A series of functions which compute counts and descriptive statistics for different variable types
 
+#' Count function for binary (true/false) variables
+#'
+#' @param data input data.table
+#' @param varName name of the variable column in data of interest
+#' @param popN denominator; population N, numeric
+#' @param expectedCat vector of expected categories; NA, unused in this function
+#'
+#' @return
+#' @export
+#'
+#' @examples
 count_TF <- function(data, varName ,popN, expectedCat = NA){
   data[, eval(varName) := as.numeric(get(varName))]
   N <- data[get(varName) == TRUE | get(varName) == 1, .N]
@@ -10,25 +19,47 @@ count_TF <- function(data, varName ,popN, expectedCat = NA){
   return(results)
 }
 
+#' Count function for numeric variables which returns mean, SD and median, Q1, Q3 (type 1)
+#'
+#' @param data input data.table
+#' @param varName name of the variable column in data of interest
+#' @param popN denominator; population N, numeric
+#' @param expectedCat vector of expected categories; NA, unused in this function
+#'
+#' @return two rows containing; i) mean, sd, and ii) median, Q1, Q3
+#' @export
+#'
+#' @examples
 count_NUM1 <- function(data, varName, popN = NA ,expectedCat = NA){
   data[, eval(varName) := as.numeric(get(varName))]
   info <- summary(data[[1]])
-  
+
   info_mean = info[[4]]
   info_sd = sd(data[[1]])
   info_median = info[[3]]
   info_q1 = info[[2]]
   info_q3 = info[[5]]
-  
+
   values <- as.data.table(rbind(c('STATS1',info_mean, info_sd,''),c('STATS2',info_median,info_q1,info_q3)))
   return(values)
 }
 
+#' Count function for numeric variables which returns median, Q1, Q3  and min, max (type 2)
+#'
+#' @param data input data.table
+#' @param varName name of the variable column in data of interest
+#' @param popN denominator; population N, numeric
+#' @param expectedCat vector of expected categories; NA, unused in this function
+#'
+#' @return two rows containing; i) median, Q1, Q3, ii) min, max
+#' @export
+#'
+#' @examples
 count_NUM2 <- function(data, varName, popN = NA ,expectedCat = NA){
   data[, eval(varName) := as.numeric(get(varName))]
-  
+
   info <- summary(data[[1]])
-  
+
   info_median = info[[3]]
   info_q1 = info[[2]]
   info_q3 = info[[5]]
@@ -38,6 +69,19 @@ count_NUM2 <- function(data, varName, popN = NA ,expectedCat = NA){
                                 c('STATS2',info_min,info_max,NA)))
   return(values)
 }
+
+
+#' Count function for categorical variables 
+#'
+#' @param data input data.table
+#' @param varName name of the variable column in data of interest
+#' @param popN denominator; population N, numeric
+#' @param expectedCat vector of expected categories
+#'
+#' @return one row for every value of expectedCat
+#' @export
+#'
+#' @examples
 count_CAT <- function(data, varName, popN, expectedCat){
   expectedCatDf <- as.data.table(as.character(expectedCat))
   expectedCatDf <- expectedCatDf[, orderCol := .I]
@@ -61,19 +105,3 @@ count_CAT <- function(data, varName, popN, expectedCat){
   return(results)
 }
 
-count_QUART <- function(data,varName, popN, expectedCat){
-  percentile_99 <- quantile(data[,get(varName)],probs = 0.99)
-  quart <- quantile(data[get(varName) <= percentile_99,get(varName)])
-  
-  if(quart[2] == 0){
-    quart[1] <- -1
-  }else{
-    quart[1] <- min(data[,get(varName)])
-  }
-  quart[5] <- max(data[,get(varName)])
-  
-  values <- as.data.table(table(cut(data[,get(varName)], breaks = quart, include.lowest	= FALSE, ordered_result = TRUE)))
-  values[, per := 100*(N/popN)][, empty := NA][,V1 := NULL]
-  values <- cbind(expectedCat,values)
-  return(values)
-}
