@@ -1,4 +1,6 @@
-# function to round vectors
+# function to round/mask vectors
+
+# rounding function
 # nsmall is the number of digits for rounding, returns a character string
 round_vec <- function(x, nsmall = 1){
   sapply(x, function(s){
@@ -67,13 +69,12 @@ mask_round_descriptives <- function(raw_table, number =5, nsmall =1){
   # if asd reported, round appropriately
   if(any(grepl("asd",colnames(raw_table)))){
     asd_col <- grep("asd",colnames(raw_table), value = T)
-    raw_table[,asd_col] <- round_vec(raw_table[,asd_col],3)
+    raw_table[,asd_col] <- round_vec(raw_table[,asd_col],2)
     # for asd_1 margaret also makes a special request to never display 0.000, so let's hard-code that in
-    recode_vals <- which(raw_table[,asd_col] == "0.000")
-    raw_table[,asd_col][recode_vals] <- "<0.001"
+    recode_vals <- which(raw_table[,asd_col] == "0.00")
+    raw_table[,asd_col][recode_vals] <- "<0.01"
   }
   
   return(raw_table)
   
 }
-

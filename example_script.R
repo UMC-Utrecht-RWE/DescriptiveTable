@@ -22,17 +22,8 @@ study_quarters_all <- c("2021 Q1",
 # ------- Load Functions, Preliminaries -------------
 # ---------------------------------------------------
 
-# functions to compute counts, percentages (from M_SC files + metadata)
-source("functions/count_functions.R")
+sapply(paste0("functions/",list.files("functions/")), source)
 
-# function to compute absolute standardized differences (from M_SC files + metadata)
-source("functions/asd_functions.R")
-
-# function to create the baseline descriptives
-source("functions/DescriptivesTable.R")
-
-# additional function to mask/round numeric vectors to strings
-source("functions/masking-functions.R")
 
 # load helper information on what variables are expected to be missing in the DAP
 ExpectedMissingVars <- data.table::fread("input/ExpectedMissingVariables.csv")
@@ -67,6 +58,17 @@ tableout <- DescriptivesTable(popdf = popdf,# data object
                   use_weights = FALSE,
                   output_asd = FALSE)
 
+# rough version: masking and rounding
+mask_round_descriptives(tableout)
+
+# # for clarity, this is what V1-V3 represent
+setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
+         c("N_exposed","perc_exposed","aux_exposed",
+           "N_control","perc_control","aux_control")
+)
+
+
+# ---- other functionality/ things to note 
 # optional; re-arranging of columns to sensible order
 tableout[,c("label",paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"))]
 
@@ -77,14 +79,7 @@ tableout[,c("label",paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"))]
  # round_to; round to decimal places as chr. string, return <0 if resulting numeric zero
 sapply(tableout$perc_control, function(s) round_to(s,2))
 
+
  # mask_to ; mask cell counts
 mask_count(tableout$N_control,5)
 
-# all together
-mask_round_descriptives(tableout)
-
-# # for clarity, this is what V1-V3 represent
-setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
-                    c("N_exposed","perc_exposed","aux_exposed",
-                      "N_control","perc_control","aux_control")
-)
