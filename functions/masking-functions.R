@@ -1,9 +1,11 @@
-#' Helper: check if a category value is a valid count or an exception value
+#' Helper: check if the value for the count is equal to one of the exception values 
+#' (i.e., not a valid positive count)
 #'
 #' @param value Category count or corresponding exception value
 #'
-#' @returns Logical indicating whether the value is within the exception values.
-#' If TRUE, category count is not a positive integer, and thus is not subject to masking. If FALSE, the value is a proper count that may be subject to masking.
+#' @returns Logical indicating whether the value is one of the exception values.
+#' If TRUE, category count is not a positive integer, and thus is not subject to masking. 
+#' If FALSE, the value is a proper count that may be subject to masking.
 #' @export
 #'
 #' @examples
@@ -14,31 +16,44 @@ is_exception <- function(value){
 
 #' Mask one vector.
 #' 
-#' Inputs a vector of categorical counts. All counts correspond to one variable. Returns the masked version of the input. Ignores exception values.
-#' Concretely, it masks a) if there is any, all values below the threshold and 2) if any value is higher than the threshold, the largest of those, according to pre-specified rules.
+#' Inputs a vector of counts corresponding to one variable. Each element is
+#' the count for each possible categories of that variable.
+#' Returns the masked version of the input. If there are any, ignores exception values.
+#' The following values are masked 1) all counts below the threshold are mapped to '<threshold',
+#' 2) if there is at least one count higher than the threshold, the largest of those is mapped to an interval
+#' built according to prespecified rules.
 #' 
-#' @param input_vector Numeric or character vector of category counts, possibly including special values such as NA, NE, etc. 
-#' @param threshold Numeric. Threshold below which values need to be masked, externally determined.
+#' @param input_vector Numeric or character vector of counts. Possibly including special values such as NA, NE, etc. Non-special values should be positive integer counts.
+#' @param threshold Integer. Threshold below which values need to be masked. Determined externally.
 #' @param output_warnings Logical. Should warning be issued displaying which value combinations are not possible, if any?
 #' @param percentage Logical. Should output be raw numbers or corresponding percentages?
+#' @param total Integer. Defaults is NULL. If NULL, total will be computed each time as the sum of the category counts. Otherwise, provided value will be used. Relevant for interval masking.
 #'
-#' @returns If no masking is needed, the original vector or its percentage version. If masking is needed, the masked counterpart or its percentage version.
+#' @returns If no masking is needed, the original vector or its percentage version. If masking is needed, the masked vector or its percentage version.
 #' 
 #' @export
 #'
 #' @examples
-mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, percentage = FALSE){
+mask_vector <- function(input_vector, 
+                        threshold = 5, 
+                        output_warnings = TRUE, 
+                        percentage = FALSE,
+                        total = NULL){
   
   ###### 1. IDENTIFY COUNTS AND INGORE EXCEPTIONS #####
-  # Flag and store positive integers (equivalently, non-exceptions values)
-  # Function works by applying masking to positive counts, and leaving all exceptions unchanged
+  # Flag positive integers (equivalently, non-exceptions values)
   positive_counts_indices <- !sapply(input_vector, is_exception)
+  # Store positive integers
   counts <- as.numeric(input_vector[positive_counts_indices])
+  # Masking is applied to numerical counts. Exception values are left unchanged.
   
   ##### 2. CREATE STRING TO SUBSTITUTE VALUES BELOW THRESHOLD
   
-  # Compute total: sum of all category counts (ignores if exceptions should correspond to a non-zero value)
-  total <- sum(counts) 
+  # If not provided, compute total as the sum of each category
+  if(is.null(total)){
+  total <- sum(counts)
+  } 
+  
   # Create string to replace masked values below the threshold. String is different depending on whether result is
   # integers or percentages.
   if(percentage){
@@ -49,12 +64,13 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
     below_threshold_sub <- paste0('[1-', threshold-1, ']')
   }
   
+  
   ###### 3. HANDLE INPUTS OF LENGTH 1 
   
   # Handle inputs of length 1: types TF or cat with one category
-  ## If the input is non_numeric, left as is
+  ## If the input is an exception left as is
   if(length(input_vector) == 1 & is_exception(input_vector[1])) return(input_vector)
-  ## Input may be of length >1, even if there is only with positive integer, due to exception values
+  ## Input may be of length >1, even if there is only one non-exception value
   ## In that case, apply proper masking to that count and leave other values as is
   if(length(counts) == 1){
     # Substitute count according to rule
@@ -65,13 +81,13 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
   ###### 4. APPLY MASKING TO NON-ZERO COUNTS
   
   ## 1. Identify masked and unmasked values 
-  ## Masked values are 'naively' masked (below threshold) and additional interval masked value.
+  ## Masked values are: 1) 'naively' masked (below threshold) and 2) additionally interval masked value.
   
   ## Create logical vectors: IS or NOT naively masked
   naively_masked_logical <- ifelse(counts < threshold, TRUE, FALSE) # logical, values that will be naively masked
   not_naively_masked_logical <- !naively_masked_logical # logical, values that are not naively masked
   
-  # Create vector 'masked counts'. Masking is applied later.
+  # For storage, create vector 'masked counts'. Masking is applied later.
   # Vector depends on output type (percentage or integers)
   if(percentage==TRUE){
     masked_counts <- (counts/total)*100
@@ -83,25 +99,24 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
   
   # Compute number of masked values, needed for both warnings and computing bounds of masked interval
   n_masked <- sum(naively_masked_logical) 
-  
-  ###### 4.1.1 Compute and apply interval masking
+
   # Interval masking is only applied when both conditions are true: 
   # 1) not all values are naively masked
   # 2) at least one value is naively masked, i.e., not all values are unmasked (in which case nothing is necessary)
   
-  if(any(not_naively_masked_logical & !all(not_naively_masked_logical))) {
+  if(any(not_naively_masked_logical) & any(naively_masked_logical)) {
     
     ########## SELECT COUNT WHICH IS INTERVAL MASKED
     ## The count to be interval masked is the largest count that is not naively masked
     ## This might not be uniquely defined, as two or more categories could have the same max count.
-    ## E.g., counts like: 3,3, 18, 18. You only want to interval mask one of the 18s, not both
+    ## E.g., input is: 3,3, 18, 18. You only want to interval mask one of the 18s, not both
     ## (see tests for more examples)
     ## We account for this by selecting only one of multiple candidates
     
     # maximum value among not naively masked
     interval_masked_value <- max(counts[not_naively_masked_logical]) 
     # get index of first category count equal to maximum value 
-    ## (works if vector has length 1, i.e., the maximum value is uniquely identified)
+    ## (also works if vector has length 1, i.e., the maximum value is uniquely identified)
     interval_masked_index <- which(counts == interval_masked_value)[1] 
     ## Generate logical indicating which value is the one interval masked 
     interval_mask_logical <- rep(FALSE, length(counts)) ## All FALSE as placehold
@@ -111,26 +126,38 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
     
     ####### COMPUTE INTERVAL ########
     
-    ## Generate interval according to formula on slides.
-    ## The intuition for the bounds  of the interval is as follows.
-    ## 1. We substract from the total the sum of all values that will not be masked 
-    ## (i.e., the values that are not lower than the threshold or the previosuly selected
-    ## interval masked value). 
-    ## After this, we have the total and the sum of all the values that are neither naively not interval masked
-    ## Now, one scenario is that all the naively masked values would, if unmasked, take the value 1
-    ## The upper bound of the interval is the value that would make this scenario possible:
-    ### The sum of all the naively masked values being one, the upper bound of the interval and the unmasked values
-    ### is equal to the total.
-    ## Another scenario is that all the naivel ymasked values would, if unmasked, take the value 
-    ## threshold - 1. The lower bound of the interval is the value that satisfies this:
-    ## the sum of all naively masked values being threshold - 1, and the lower bound of the interval,
-    ## and the unmasked values is equal to the total.
-    ## IMPORTANTLY: in some cases there is no way to create an interval like this, see below
+    ## Formula for interval is in slides
+    ## Note which values will be masked are already determined: all values below threshold
+    ## and, from the values above threshold, the category with the largest value [interval-masked value]
+    ## Both of this have been flagged already.
+    ## This section simply computes the interval to use for the masking of the largest value above 
+    ## the threshold
     
-    ## Note that the formula does not use the actual value for the count that is interval masked.
+    ## Some intuition for the calculation:
+    ## 1. Everybody that sees the table will know the total and the values that will not be masked.
+    ## 2. Everybody can compute the sum all all the values that are neither naively not interval masked
+    ## 3.  We want to create an interval that reveals nothing about the naively masked values, other
+    ## than they are in the interval [1-(threshold-1)]
+    
+    ## Imagine two scenarios
+    ## 1. All the naively masked values would, if unmasked, take the value 1
+    ## For this to be possible, the sum of the all the 1s + the sum of the unmasked values 
+    ## + the upper bound of the interval should be equal to the total.
+    ## The upper bound of the interval is the value that makes possible that all naively 
+    ## masked values are equal to 1
+    
+    ## 2. All the naively masked values would, if unmasked, the the value [threshold - 1] (i.e.,
+    ## their maximum possible value)
+    ## For this to be possible, the sum of all the [threshold-1] + the sum of the unmasked values
+    ## + the lower bound of the interval should be equal to the total.
+    ## The lower bound of the interval is the value that makes possible that all naively masked 
+    ## values are equal to threshold-1.
+    
+    ## Note 1: Sometimes it is not possible to create such an interval. More below.
+    ## Note 2: The formula does not use the actual value for the count that is interval masked.
     ## However, by construction, the actual value for the count will *always* fall in this interval
     
-    ## Logical indicating which values are neither naively masked not interval masked
+    ## Logical indicating which values are neither naively masked nor interval masked
     not_masked_logical <- not_naively_masked_logical & !interval_mask_logical
     ## Vector of values from non-masked categories
     not_masked_values <- counts[not_masked_logical]
@@ -140,18 +167,17 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
     theoretical.lower.int <- total - sum(not_masked_values) - n_masked*(threshold-1)
     
     #### IMPORTANT EXCEPTION:
-    ## We KNOW that the lower bound of the interval masked value has to be equal or higher than the threshold
-    ## This is because, if the lower value were lower than the threshold, if we have been naively masked and not interval masked!
+    ## We know the lower bound of the interval needs to be higher than the threshold.
+    ## If the lower value were below the threshold, it would have been naively masked.
+    ## I.e., the masking of that value would be [1, threshold-1]
     ## Thus, the effective lower interval is:
     
     effective.lower.int <- max(theoretical.lower.int, threshold)
     
     ####### MASK INTERVAL ##########
-    
-    ####### APPLY THE MASKING
   
     ### First, generate string for substitution.
-    ## As before, this string depends on whether output is percentage or integers
+    ## String depends on whether output is percentage or integers
     if(percentage == TRUE){
       interval_mask_sub_lower <- (effective.lower.int/total)*100
       interval_mask_sub_upper <- (theoretical.upper.int/total)*100
@@ -166,81 +192,63 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
   }
   
   ###### 4.2. APPLY 'NAIVE' MASKING
-  
-  ## Simply mask values lower than threshold
-  ## Note that, if there's no value to be interval masked, this is irrelevant.
-  ## If there is, this was already modified in the previous chunk
-  
+  ## Note that interval masking has already been applied
   masked_counts <- ifelse(counts < threshold, below_threshold_sub, masked_counts)
   
   ####### 5. SUBSTITUTE MASKED COUNTS IN OUPUT VECTOR
-  
   ## (in this way, exceptions are left as is)
   input_vector[positive_counts_indices] <- masked_counts
   output_vector <- input_vector ## THIS IS THE RETURN VALUE
   
   ####### 6. (OPTIONAL) WARNING
-  ##### When and why is the warning triggered? 
-  ## Masking implies than values lower than threshold are reported to fall in the interval [1,threshold]
-  ## When this masking is repeated for multiple values, one desirable property is that the masked values
-  ## cannot be automatically computed from the (known) total. Another desirable property is that 
-  ## any combination of values within the replacement interval for the naively masked values
-  ## is compatible with the masked vector.
-  ## I.e., for two masked values and threshold 5, counts that are compatible with table are all of:
-  ## [1,1], [1,2], [1,3], [1,4], [2,1] ... until [4,4]
-  ## While this is desirable, this is simply not possible for some tables.
-  ## The warning is thrown when this is not possible
-  ## Additionally, it makes explicit which value combinations of the original counts are not compatible
-  ## with the masked table
+  #### Why is the masking triggered?
+  ## 1. Masking means that values lower than the threshold are mapped to [1,threshold-1]
+  ## 2. If multiple values are masked, there're two desirable properties:
+  ## 2.a) The masked values cannot be directly computed from the total
+  ## 2.b) Any combination of original values is compatible with the masking.
+  ##      E.g., for two masked values and threshold 5, the original values could be
+  ##      all of: [1,1], [1,2], [1,3], [1,4], [2,1] ... until [4,4]
+  ##      Knowing the totals, the interval masked count, and the values for unmasked counts,
+  ##      one cannot conclude any of this original value combinations is incompatible with the table
+  ## Requirement 2 b) is not possible in some instances, under the masking rules implemented in this 
+  ## function.
+  ## The warning is thrown when requirement 2b) is not satisfied
+  ## Besides, the warning shows which value combinations of the original counts are not
+  ## compatible with the reported masked table
   
   if(output_warnings == TRUE) {
     ## Warning is triggered if 
-    ### a) the interval needs to be truncated or
-    ### b) all the values are naively masked (in which case, if the total is knwon)
-    ### not all values will be possible
+    ### a) the effective lower int and theoretical.lower.int are not equal OR
+    ### b) all the values are naively masked. In this case, if the total is known, not all original value combinations are possible
     
-    if ((exists("theoretical.lower.int") && theoretical.lower.int < threshold) | all(naively_masked_logical)) {
-      # To understand which values are not possible, recall how intervals are computed
-      # Upper value of interval is the value the interval masked count would have taken
-      # IF all the naively interval values are equal to 1. By construction, this value is never modified
-      # Lower value of interval is the value the interval masked count would have take
-      # IF all the naively interval values are equal to threshold - 1.
-      # This value is truncated when it's lower than the thresholds. 
-      ## (because if it was lower than the threshold, it would not be interval but naively masked)
-      # Thus, by definition, combinations were naively masked intervals are 'too high'
-      # won't be possible.
+    if ((exists("theoretical.lower.int") && theoretical.lower.int != effective.lower.int) | all(naively_masked_logical)) {
       
-      # Concretely, after substracting from the total the sum of the values that are not masked,
-      # and the effective lower bound of the interval (which is equal to the threshold),
-      # we obtain the maximum quantity that the naively masked values can add to. 
-      # If the naively masked values would add up to a value higher than that, the lower bound of the interval
-      # would be lower than the threshold (which is not possible)
+      ## How to determine which original value combinations are incompatible with 
+      ## the masked table?
+      ## 1. Known quantities: total, sum of not masked values & effective lower bound of the interval.
+      ## 2. Unknown: original values.
+      ## 3. Substract sum of not masked values + effetive lower bound from total.
+      ## 4. This is the 'remaining quanity'. The original values need to add up to at MOST this.
+      #     If they add up to something higher, this is incompatible with the information. 
+      #     If they add up to something lower, this will be within the interval
       
-      # Note that the total, sum of values not masked, and effective lower bound of the interval
-      # are bounds that one cannot modify. 
-      
-      # After substraction, the result is the 'remaining' quantity. You can
-      # split that remaining across the naively masked values in different ways, but never in 
-      # a way that adds up to something that is higher than that value
-      
-      ## The values that are incompatible with the table are different depending on whether there's one interval masked value
-      
-      ## NOTE: This applies if there is an interval masked value
-      ## If all the values are lower than the threshold, the maximum these values can add up to
-      ## is simplyu the (assumed known) total
+      ## Note: if all values are naively masked, the original values need to add up exactly to the total. 
+   
       if(any(not_naively_masked_logical)) {
         maximum_to_split <- total - sum(not_masked_values) - effective.lower.int}
-      if(all(naively_masked_logical)) {
-        maximum_to_split <- total
-      }
       
-      # 1. Create a grid of all the combinations of values in the intervals [1, threshold]
-      naive_interval <- 1:(threshold - 1) # interval to mask individual counts enforced by dap
+      # 1. Create a grid of all the combinations of values in the interval [1, threshold-1]
+      naive_interval <- 1:(threshold - 1) # interval to mask individual counts enforced externally
       combinations_grid <- do.call(expand.grid, replicate(n_masked, naive_interval, simplify = FALSE))
       # 2. Compute what each potential combination of naively masked values add up to
       combinations_grid$sums <- rowSums(combinations_grid)
       # 3. Compute which interval combinations are possible and which are impossible
-      combinations_grid$possible <- ifelse(combinations_grid$sums > maximum_to_split, 'Impossible', 'Possible')
+      if(any(not_naively_masked_logical)) {
+        combinations_grid$possible <- ifelse(combinations_grid$sums > maximum_to_split, 'Impossible', 'Possible')
+      }
+      if(all(naively_masked_logical)) {
+        combinations_grid$possible <- ifelse(combinations_grid$sums == total, 'Impossible', 'Possible')
+      }
       
       # 4. Compute percentage
       n_possible <- length(combinations_grid$possible[combinations_grid$possible == 'Possible'])
@@ -250,7 +258,7 @@ mask_vector <- function(input_vector, threshold = 5, output_warnings = TRUE, per
       perc_impossible <- paste0((n_impossible/n)*100, '%')
       
       warning(paste0('This table may not be safe. Of all possible combinations of naively masked values, ', 
-                     perc_impossible, ' value combinations can be excluded'))
+                     perc_impossible, ' original value combinations can be excluded'))
       ## @TO-DO:
       ### Decide if consider permutations as one
       ### Think about what the better way of displaying this is: as a list, print the grid directly...
@@ -279,11 +287,14 @@ mask_vector_wrapper <- function(tableout, threshold = 5, output_warnings = FALSE
   tableout_var <- tableout %>% 
     as.data.frame() %>% 
     filter(type %in% c('CAT', 'TF'),
-           var != 'I_HIV_ALGO') # IMPORTANT: THIS IS JUST A TEST WORKAROUND, AS THE PROBLEM SEEMS TO BE IN TABLEOUT
+           var != 'I_HIV_ALGO') # IMPORTANT: THIS IS JUST A TEST WORKAROUND.
+  # In the example table I_HIV_ALGO appears twice, which makes the code fail. This seems to be a mistake in the test, so is handled
+  # ad-hoc only
+  
   # 2. Obtain unique variables,
   variables <- unique(tableout_var$var)
   
-  # Iterate
+  # Iterate over variables
   for(i in seq_along(variables)){
     var <- variables[i] # Get the variable name
 

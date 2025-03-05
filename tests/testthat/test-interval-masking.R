@@ -104,6 +104,12 @@ test_that('counts of length 1 are correctly handed',{
   expect_equal(mask_vector(c(NA)), NA)
   expect_equal(mask_vector(c(3, 'NE', NaN, -66)), c('[1-4]', 'NE', NaN, -66))
   expect_equal(mask_vector(1), '[1-4]')
-  expect_equal(mask_vector(1, percentage = NA))
+  #expect_equal(mask_vector(1, percentage = TRUE), '')
+})
+
+test_that('adding an external total works',{
+  #@TO-DO: Unlikely to be a desirable output
+  expect_equal(mask_vector(c(3,97, NA), total = 102), c('[1-4]', '[98-101]', NA))
+  #expect_equal(mask_vector(1, percentage = TRUE), '')
 })
 
