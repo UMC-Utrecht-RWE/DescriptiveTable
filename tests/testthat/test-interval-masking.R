@@ -11,7 +11,7 @@ test_that("masking a numerical vector returns correct output", {
   expect_equal(mask_vector(8, threshold = 9), '[1-8]')
   expect_true(is.character(mask_vector(count))) 
   
-  # Several counts need to be masked and one interval masked
+  # Several counts need to be masked and one interval masked¡
   count <- c(1,3,4, 97,100)
   masked_count <- c("[1-4]", "[1-4]", "[1-4]", "97","[96-105]")
   expect_equal(mask_vector(count), masked_count)
@@ -31,7 +31,7 @@ test_that('warnings are thrown correctly', {
   
   # masking a vector throws warning when not all value combinations are possible'
   # Internally, this happens when the lower bound of the theoretical interval is lower than the threshold
-  expect_warning(mask_vector(c(1,2,3,7)))
+  expect_warning(mask_vector(c(1,2,3,7))) # total is 13
   expect_warning(mask_vector(c(14,14), threshold = 17))
   
   # no warning if warnings are turned off
