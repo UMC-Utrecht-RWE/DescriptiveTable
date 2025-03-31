@@ -21,7 +21,16 @@ round_vec <- function(x, nsmall = 1){
   })
 }
 
-
+# function to mask vectors
+# number ; below which number to mask counts (typically 5)
+mask_count <- function(x, number = 5){
+  unlist(sapply(x, function(s){
+    if(s %in% c("NE","NA",0,NA,NaN,"") | as.numeric(s) < 0 | grepl("<",s)) return(s)
+    if(as.numeric(s) == 0) return(s)
+    if(as.numeric(s) < number) return(paste0("<", number))
+    if(!as.numeric(s) < number) return(sprintf("%1.0f", as.numeric(s)))
+  }))
+}
 
 # overall function to mask baseline descriptives coming from DescriptivesTable
 mask_round_descriptives <- function(raw_table, number =5, nsmall =1){
