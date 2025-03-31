@@ -1,0 +1,59 @@
+var;type;expectedCat;label;parent;parent_cat;header;check_missingness_ps
+SV_PRIOR_COVID_DG;TF;NA;Previous diagnosis of COVID-19;NA;NA;COVID-19 history;FALSE
+SV_PRIOR_COVID_POSTEST;TF;NA;Positive test result for COVID-19;NA;NA;NA;FALSE
+PRIOR_ANAPHYLAXIS;TF;NA;History of anaphylaxis;NA;NA;Comorbidities;FALSE
+PRIOR_ALLERGIES;TF;NA;History of allergies;NA;NA;NA;FALSE
+PRIOR_ANY_DM;TF;NA;Diabetes mellitus (types 1 and 2);NA;NA;NA;FALSE
+PRIOR_HYPERTENSION;TF;NA;Hypertension;NA;NA;NA;FALSE
+PRIOR_CVD;TF;NA;Cardiovascular disease;NA;NA;NA;FALSE
+PRIOR_CEREBROVASCULAR_DISEASE;TF;NA;Cerebrovascular disease;NA;NA;NA;FALSE
+PRIOR_CRD;TF;NA;Chronic respiratory disease;NA;NA;NA;FALSE
+PRIOR_CKD;TF;NA;Chronic kidney disease;NA;NA;NA;FALSE
+PRIOR_CLD;TF;NA;Chronic liver disease;NA;NA;NA;FALSE
+PRIOR_ANY_CANCER;TF;NA;Cancer;NA;NA;NA;FALSE
+PRIOR_AUTOINMUNE_DISORDERS;TF;NA;Autoimmune disorders;NA;NA;NA;FALSE
+PRIOR_INFLUENZA_RESPINF;TF;NA;Influenza infection or other respiratory infections;NA;NA;NA;FALSE
+PRIOR_HIV;TF;NA;HIV;NA;NA;NA;FALSE
+PRIOR_SCD;TF;NA;Sickle cell disease;NA;NA;NA;FALSE
+CHARLSON_INDEX;CAT;0,1,2;Charlson Comorbidity Index score;NA;NA;NA;FALSE
+PRIOR_MYOCARDIAL_INFARCT;TF;NA;Myocardial infarct ;NA;NA;NA;FALSE
+PRIOR_CHF;TF;NA;Congestive heart failure;NA;NA;NA;FALSE
+PRIOR_PVD;TF;NA;Peripheral vascular disease;NA;NA;NA;FALSE
+PRIOR_MILD_MOD_KD;TF;NA;Mild to moderate kidney disease;NA;NA;NA;FALSE
+PRIOR_ACUTE_KD;TF;NA;Severe kidney disease;NA;NA;NA;FALSE
+PRIOR_MILD_LD;TF;NA;Mild liver disease;NA;NA;NA;FALSE
+PRIOR_MOD_SEV_LD;TF;NA;Moderate or severe liver disease;NA;NA;NA;FALSE
+COD_ANY_CANCER;TF;NA;Any malignancy;NA;NA;NA;FALSE
+PRIOR_METASTASIS;TF;NA;Metastatic solid tumor;NA;NA;NA;FALSE
+COD_HIVNOAIDS;TF;NA;HIV infection, no AIDS;NA;NA;NA;FALSE
+PRIOR_AIDS;TF;NA;AIDS;NA;NA;NA;FALSE
+PRIOR_DM_WITHCOMPLICATIONS;TF;NA;Diabetes  with complications;NA;NA;NA;FALSE
+PRIOR_DM_NOCOMPLICATIONS;TF;NA;Diabetes no complications;NA;NA;NA;FALSE
+PRIOR_RHEUMATICDISEASE;TF;NA;Rheumatic disease;NA;NA;NA;FALSE
+PRIOR_PEPTICULCER;TF;NA;Peptic ulcer disease;NA;NA;NA;FALSE
+PRIOR_DEMENTIA;TF;NA;Dementia;NA;NA;NA;FALSE
+PRIOR_HEMIPLEGIA;TF;NA;Hemiplegia or paraplegia;NA;NA;NA;FALSE
+CDC_RISK;CAT;0,1,2;CDC at-risk groups;NA;NA;NA;FALSE
+SV_IMMUNOCOMPROMISED;TF;NA;Immunocompromising conditions;NA;NA;NA;FALSE
+PRIOR_IMMUNODEFICIENCIES;TF;NA;Immunodeficiencies;NA;NA;NA;FALSE
+PRIOR_IMMUNO_MED_1YEAR;TF;NA;Immunosupressant medication use;NA;NA;NA;FALSE
+PRIOR_HIV;TF;NA;HIV and other immunosuppressing conditions;NA;NA;NA;FALSE
+F_PARALYSIS;TF;NA;Paralysis;NA;NA;Surrogates of frailty;FALSE
+F_HEMIPLEGIA;TF;NA;Hemiplegia or paraplegia;NA;NA;NA;FALSE
+F_PARKINSON;TF;NA;Parkinson's disease;NA;NA;NA;FALSE
+F_SKIN_ULCER;TF;NA;Skin ulcer;NA;NA;NA;FALSE
+F_WEAKNESS;TF;NA;Weakness;NA;NA;NA;FALSE
+F_STROKE;TF;NA;Stroke/brain injury;NA;NA;NA;FALSE
+F_AMBULANCE;TF;NA;Ambulance transport;NA;NA;NA;FALSE
+F_DEMENTIA;TF;NA;Dementia;NA;NA;NA;FALSE
+F_DIFFICULTY_WALKING;TF;NA;Difficulty walking;NA;NA;NA;FALSE
+F_PSYCIATRIC_ILLNESS;TF;NA;Psychiatric illness;NA;NA;NA;FALSE
+F_SEPSIS;TF;NA;Sepsis;NA;NA;NA;FALSE
+F_MYOCARDIAL_INFARCT;TF;NA;Myocardial infarct;NA;NA;NA;FALSE
+F_PODIATRIC_CARE;TF;NA;Podiatric care;NA;NA;NA;FALSE
+F_BLADDER_INCONTINENCE;TF;NA;Bladder incontinence;NA;NA;NA;FALSE
+F_DIAB_COMPLICATIONS;TF;NA;Diabetes with complications;NA;NA;NA;FALSE
+F_ARTHRITIS;TF;NA;Arthritis;NA;NA;NA;FALSE
+F_COAGULATION_DEF;TF;NA;Coagulation deficiencies;NA;NA;NA;FALSE
+F_VERTIGO;TF;NA;Vertigo;NA;NA;NA;FALSE
+F_LIPID_ANOMALY;TF;NA;Lipid abnormalities;NA;NA;NA;FALSE

@@ -1,0 +1,45 @@
+var;variable_id;type;expectedCat;label;parent;parent_cat;header;HIST;FUP;system;remove_parenthesis_hist;NCO;lookback_period;start_risk;end_risk;condition;estimator
+COD_GBSYNDROME;COD_GBSYNDROME;TF;NA;Guillain-Barre syndrome;NA;NA;Autoimmune diseases;TRUE;TRUE;Autoimmune diseases;FALSE;FALSE;365;1;42;NA;incidence
+COD_ACUTE_ENCEPHALOMYELITIS;COD_ACUTE_ENCEPHALOMYELITIS;TF;NA;Acute disseminated encephalomyelitis;NA;NA;NA;TRUE;TRUE;Autoimmune diseases;FALSE;FALSE;365;1;42;NA;incidence
+COD_NARCOLEPSY;COD_NARCOLEPSY;TF;NA;Narcolepsy;NA;NA;NA;TRUE;TRUE;Autoimmune diseases;FALSE;FALSE;365;1;42;NA;incidence
+COD_ACUTE_ASEPTIC_ARTHRITIS;COD_ACUTE_ASEPTIC_ARTHRITIS;TF;NA;Acute aseptic arthritis;NA;NA;NA;TRUE;TRUE;Autoimmune diseases;FALSE;FALSE;365;1;42;NA;incidence
+COD_DM1;COD_DM1;TF;NA;Diabetes mellitus type 1;NA;NA;NA;TRUE;TRUE;Autoimmune diseases;FALSE;FALSE;3652;1;365;NA;incidence
+COD_ITC;COD_ITC;TF;NA;(Idiopathic) thrombocytopenia;NA;NA;NA;TRUE;TRUE;Autoimmune diseases;FALSE;FALSE;365;1;42;NA;incidence
+COD_TTS;COD_TTS;TF;NA;Thrombosis with thrombocytopenia syndrome;NA;NA;NA;TRUE;TRUE;Autoimmune diseases;FALSE;FALSE;365;1;15;NA;incidence
+COD_MYOSITIS;COD_MYOSITIS;TF;NA;Myositis;NA;NA;NA;TRUE;TRUE;Autoimmune diseases;FALSE;FALSE;365;1;365;NA;incidence
+COD_ACUTE_CV_INJURY;COD_ACUTE_CV_INJURY;TF;NA;Acute cardiovascular injury*;NA;NA;Cardiovascular system;TRUE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;365;NA;incidence
+COD_ARRHYTHMIA;COD_ARRHYTHMIA;TF;NA;Arrhythmia;NA;NA;NA;TRUE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;365;NA;incidence
+COD_HF;COD_HF;TF;NA;Heart failure;NA;NA;NA;TRUE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;365;NA;incidence
+COD_STRESS_CARDIOMYOPATHY;COD_STRESS_CARDIOMYOPATHY;TF;NA;Stress cardiomyopathy;NA;NA;NA;TRUE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;365;NA;incidence
+COD_CAD;COD_CAD;TF;NA;Coronary artery disease;NA;NA;NA;TRUE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;365;NA;incidence
+COD_MYOCARDITIS_7DAYS;COD_MYOCARDITIS;TF;NA;Myocarditis (1-7 days);NA;NA;NA;FALSE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;7;NA;incidence
+COD_MYOCARDITIS_14DAYS;COD_MYOCARDITIS;TF;NA;Myocarditis (1-14 days);NA;NA;NA;FALSE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;14;NA;incidence
+COD_MYOCARDITIS_21DAYS;COD_MYOCARDITIS;TF;NA;Myocarditis (1-21 days);NA;NA;NA;TRUE;TRUE;Cardiovascular system;TRUE;FALSE;365;1;21;NA;incidence
+COD_PERICARDITIS_7DAYS;COD_PERICARDITIS;TF;NA;Pericarditis (1-7 days);NA;NA;NA;FALSE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;7;NA;incidence
+COD_PERICARDITIS_14DAYS;COD_PERICARDITIS;TF;NA;Pericarditis (1-14 days);NA;NA;NA;FALSE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;14;NA;incidence
+COD_PERICARDITIS_21DAYS;COD_PERICARDITIS;TF;NA;Pericarditis (1-21 days);NA;NA;NA;TRUE;TRUE;Cardiovascular system;TRUE;FALSE;365;1;21;NA;incidence
+COMP_MYOPERI_7DAYS;COMP_MYOPERI;TF;NA;Myocarditis or Pericarditis (1-7 days);NA;NA;NA;FALSE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;7;NA;incidence
+COMP_MYOPERI_14DAYS;COMP_MYOPERI;TF;NA;Myocarditis or Pericarditis (1-14 days);NA;NA;NA;FALSE;TRUE;Cardiovascular system;FALSE;FALSE;365;1;14;NA;incidence
+COMP_MYOPERI_21DAYS;COMP_MYOPERI;TF;NA;Myocarditis or Pericarditis (1-21 days);NA;NA;NA;TRUE;TRUE;Cardiovascular system;TRUE;FALSE;365;1;21;NA;incidence
+COD_COAGULATUIN;COD_COAGULATUIN;TF;NA;Coagulation disorders: thromboembolism, haemorrhage;NA;NA;Circulatory system;TRUE;TRUE;Circulatory system;FALSE;FALSE;365;1;28;NA;incidence
+COD_SINGLE_ORGAN_VASCULITIS;COD_SINGLE_ORGAN_VASCULITIS;TF;NA;Single organ cutaneous vasculitis;NA;NA;NA;TRUE;TRUE;Circulatory system;FALSE;FALSE;365;1;28;NA;incidence
+COD_CVST;COD_CVST;TF;NA;Cerebral venous sinus thrombosis;NA;NA;NA;TRUE;TRUE;Circulatory system;FALSE;FALSE;365;1;28;NA;incidence
+COD_ACUTE_LIVER_INJURY;COD_ACUTE_LIVER_INJURY;TF;NA;Acute liver injury;NA;NA;Hepato-gastrointestinal and renal system;TRUE;TRUE;Hepato-gastrointestinal and renal system;FALSE;FALSE;365;1;365;NA;incidence
+COD_ACUTE_KIDNEY_INJURY;COD_ACUTE_KIDNEY_INJURY;TF;NA;Acute kidney injury;NA;NA;NA;TRUE;TRUE;Hepato-gastrointestinal and renal system;FALSE;FALSE;365;1;365;NA;incidence
+COD_ACUTE_PANCREATITIS;COD_ACUTE_PANCREATITIS;TF;NA;Acute pancreatitis;NA;NA;NA;TRUE;TRUE;Hepato-gastrointestinal and renal system;FALSE;FALSE;365;1;365;NA;incidence
+COD_RHABDOMYOLYSIS;COD_RHABDOMYOLYSIS;TF;NA;Rhabdomyolysis;NA;NA;NA;TRUE;TRUE;Hepato-gastrointestinal and renal system;FALSE;FALSE;365;1;365;NA;incidence
+COD_GLOMERULONEPHRITIS;COD_GLOMERULONEPHRITIS;TF;NA;Glomerulonephrirtis;NA;NA;NA;TRUE;TRUE;Hepato-gastrointestinal and renal system;FALSE;FALSE;365;1;365;NA;incidence
+COD_CONVULSION;COD_CONVULSION;TF;NA;Generalised convulsion;NA;NA;Nerves and central nervous system;TRUE;TRUE;Nerves and central nervous system;FALSE;FALSE;365;1;42;NA;incidence
+COD_MENINGOENCEPHALITIS;COD_MENINGOENCEPHALITIS;TF;NA;Meningoencephalitis;NA;NA;NA;TRUE;TRUE;Nerves and central nervous system;FALSE;FALSE;365;1;42;NA;incidence
+COD_TRANSVERSE_MYELITIS;COD_TRANSVERSE_MYELITIS;TF;NA;Transverse myelitis;NA;NA;NA;TRUE;TRUE;Nerves and central nervous system;FALSE;FALSE;365;1;42;NA;incidence
+COD_BELLS_PALSY;COD_BELLS_PALSY;TF;NA;Bell's palsy;NA;NA;NA;TRUE;TRUE;Nerves and central nervous system;FALSE;FALSE;365;1;42;NA;incidence
+COD_ACUTE_RESP_DISS_SYNDROME;COD_ACUTE_RESP_DISS_SYNDROME;TF;NA;Acute respiratory distress syndrome;NA;NA;Respiratory system;TRUE;TRUE;Respiratory system;FALSE;FALSE;365;1;365;NA;incidence
+COD_ERYTHEMA_MULTIFORME;COD_ERYTHEMA_MULTIFORME;TF;NA;Erythema multiforme;NA;NA;Skin and mucous membrane, bone, and joints system;TRUE;TRUE;Skin and musous membrane;FALSE;FALSE;365;1;42;NA;incidence
+COD_CHILBLAIN_LESIONS;COD_CHILBLAIN_LESIONS;TF;NA;Chilblain-like lesions;NA;NA;NA;TRUE;TRUE;Skin and musous membrane;FALSE;FALSE;365;1;42;NA;incidence
+COD_SECONDARY_AMENORRHEA;COD_SECONDARY_AMENORRHEA;TF;NA;Secondary amenorrhoea;NA;NA;Reproductive system;TRUE;TRUE;Reproductive system;FALSE;FALSE;365;1;183;SV_SEX == 'F';incidence
+COD_HYPERMENORRHOEA;COD_HYPERMENORRHOEA;TF;NA;Hypermenorrhoea;NA;NA;NA;TRUE;TRUE;Reproductive system;FALSE;FALSE;365;1;183;SV_SEX == 'F';incidence
+COD_ANAPHYLAXIS;COD_ANAPHYLAXIS;TF;NA;Anaphylaxis*;NA;NA;Other systems;TRUE;TRUE;Other systems;FALSE;FALSE;365;0;1;NA;prevalence
+COD_MIS;COD_MIS;TF;NA;Multisystem inflammatory syndrome;NA;NA;NA;TRUE;TRUE;Other systems;FALSE;FALSE;365;1;42;NA;incidence
+COD_SUBACUTE_THYROIDITIS;COD_SUBACUTE_THYROIDITIS;TF;NA;Subacute thyroiditis;NA;NA;NA;TRUE;TRUE;Other systems;FALSE;FALSE;365;1;365;NA;incidence
+COD_SUDDEN_DEATH;COD_SUDDEN_DEATH;TF;NA;Sudden death;NA;NA;NA;FALSE;TRUE;Other systems;FALSE;FALSE;365;1;365;NA;incidence
+COD_HOSPAD_NCO;COD_HOSPAD_NCO;TF;NA;Covid-19 hospitalisation;NA;NA;NA;FALSE;FALSE;Negative Control;FALSE;TRUE;365;1;21;NA;incidence
