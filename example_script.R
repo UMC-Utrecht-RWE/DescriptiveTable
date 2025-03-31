@@ -26,18 +26,18 @@ sapply(paste0("functions/",list.files("functions/")), source)
 
 
 # load helper information on what variables are expected to be missing in the DAP
-ExpectedMissingVars <- data.table::fread("input/ExpectedMissingVariables.csv")
+ExpectedMissingVars <- data.table::fread("input/example/ExpectedMissingVariables.csv")
 ExpectedMissingVars <- ExpectedMissingVars[get(DAP) %in% TRUE, VarName]
 
 # load helper information value-labels of categorical variables
-label_lookup <- readRDS("input/label_lookup.rds")
+label_lookup <- readRDS("input/example/label_lookup.rds")
 
 # load specification of the table
-table_metadata <- fread("input/BaselineDescriptives_metadata.csv")
+table_metadata <- fread("input/example/BaselineDescriptives_metadata.csv")
   # "parent" variables and categories determine the denominator used to compute percentages for that variable
 
 # read dataset of interest
-popdf <- readRDS("input/example_cohort_dataset.rds")
+popdf <- readRDS("input/example/example_cohort_dataset.rds")
 
 # ------------------------------------------------------------
 # ------------------ Baseline Descriptives Table -------------
@@ -59,7 +59,8 @@ tableout <- DescriptivesTable(popdf = popdf,# data object
                   output_asd = FALSE)
 
 # rough version: masking and rounding
-mask_round_descriptives(tableout)
+# mask_round_descriptives(tableout)
+tableout <- mask_vector_wrapper(tableout)
 
 # # for clarity, this is what V1-V3 represent
 setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
@@ -68,9 +69,9 @@ setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
 )
 
 
-# ---- other functionality/ things to note 
-# optional; re-arranging of columns to sensible order
-tableout[,c("label",paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"))]
+# # ---- other functionality/ things to note 
+# # optional; re-arranging of columns to sensible order
+# tableout[,c("label",paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"))]
 
 
 # ----- basic post-processing -----
