@@ -286,7 +286,7 @@ mask_vector_wrapper <- function(tableout, threshold = 5, output_warnings = FALSE
   # 1. Filter applicable variable types, i.e., leave cat or tf
   tableout_var <- tableout %>% 
     as.data.frame() %>% 
-    filter(type %in% c('CAT', 'TF'),
+    dplyr::filter(type %in% c('CAT', 'TF'),
            var != 'I_HIV_ALGO') # IMPORTANT: THIS IS JUST A TEST WORKAROUND.
   # In the example table I_HIV_ALGO appears twice, which makes the code fail. This seems to be a mistake in the test, so is handled
   # ad-hoc only
