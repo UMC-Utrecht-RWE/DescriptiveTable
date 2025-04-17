@@ -20,6 +20,10 @@ output_format <- "raw"
 
 # laod function to process labels
 source(file.path(DIR_HELPER, "helper_funs.R"))
+source('functions/compute_asd.R')
+source('functions/DescriptivesTable.R')
+source('functions/masking-functions.R')
+source('functions/asd_helper.R')
 
 
 # Load data ---------------------------------------------------------------
@@ -170,7 +174,8 @@ for (metadata_file in metadata_files) {
   # table_masked$N_exposed <- mask_count(table_masked$N_exposed, min_n_cell)
   
   # New masking
-  table_masked <- mask_vector_wrapper(table_raw, threshold = min_n_cell)
+  table_masked <- mask_vector_wrapper(tableout = table_raw, threshold = min_n_cell,
+                                      table_metadata = table_metadata)
   
   # Write to disk masked and unmasked options
   print(paste0("Writing Table",which(metadata_file == metadata_files)+1, "_",this_dap," to", DIR_OUTPUT))

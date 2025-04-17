@@ -61,20 +61,22 @@ test_that('if specified, masking a vector returns a (correct) percentage',{
   count <- c(3,4,99, 102, 104)
   total <- sum(count)
   
-  naive.lower.bound <- 100*(1/total)
-  naive.upper.bound <- 100*(6/total)
+  naive.lower.bound <- round(100*(1/total), digits = 2)
+  naive.upper.bound <- round(100*(6/total), digits = 2)
   naive.interval <- paste0('[', naive.lower.bound, '-', naive.upper.bound, ']')
   
-  largeint.upper.bound <- 100*((total - 102-99 - 2*1)/total)
-  largeint.lower.bound <- 100*((total - 102-99 - 2*6)/total)
+  largeint.upper.bound <- round(100*((total - 102-99 - 2*1)/total), digits = 2)
+  largeint.lower.bound <- round(100*((total - 102-99 - 2*6)/total), digits = 2)
   largeint <- paste0('[', largeint.lower.bound, '-', largeint.upper.bound, ']')
   
-  percentages <- c(naive.interval, naive.interval, 100*(99/total), 100*(102/total), largeint)
+  percentages <- c(naive.interval, naive.interval, round(100*(99/total), digits = 2),
+                   round(100*(102/total), digits = 2), largeint)
   expect_equal(mask_vector(count, threshold = 7, percentage = TRUE), percentages)
   
   # also works with special values
   count <- c(0, 3,4, NA, 99, 102, 'NE', 104, NaN)
-  percentages <- c(0, naive.interval, naive.interval, NA, 100*(99/total), 100*(102/total), 'NE', largeint, NaN)
+  percentages <- c(0, naive.interval, naive.interval, NA, round(100*(99/total), digits = 2),
+                   round(100*(102/total), digits = 2), 'NE', largeint, NaN)
   expect_equal(mask_vector(count, threshold = 7, percentage = TRUE), percentages)
 })
 

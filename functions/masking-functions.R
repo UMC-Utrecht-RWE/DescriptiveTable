@@ -36,6 +36,7 @@ is_exception <- function(value){
 #' @examples
 mask_vector <- function(input_vector, 
                         threshold = 5, 
+                        rounding_digits = 2,
                         output_warnings = TRUE, 
                         percentage = FALSE,
                         total = NULL){
@@ -57,8 +58,8 @@ mask_vector <- function(input_vector,
   # Create string to replace masked values below the threshold. String is different depending on whether result is
   # integers or percentages.
   if(percentage){
-    below_threshold_pcn_lower <- (1/total)*100
-    below_threshold_pcn_upper <- ((threshold-1)/total)*100
+    below_threshold_pcn_lower <- round((1/total)*100, digits = rounding_digits)
+    below_threshold_pcn_upper <- round(((threshold-1)/total)*100, digits = rounding_digits)
     below_threshold_sub <- paste0('[',below_threshold_pcn_lower, '-' , below_threshold_pcn_upper, ']')
   } else {
     below_threshold_sub <- paste0('[1-', threshold-1, ']')
@@ -90,7 +91,7 @@ mask_vector <- function(input_vector,
   # For storage, create vector 'masked counts'. Masking is applied later.
   # Vector depends on output type (percentage or integers)
   if(percentage==TRUE){
-    masked_counts <- (counts/total)*100
+    masked_counts <- round((counts/total)*100, digits = rounding_digits)
   } else {
     masked_counts <- counts
   }
@@ -179,8 +180,8 @@ mask_vector <- function(input_vector,
     ### First, generate string for substitution.
     ## String depends on whether output is percentage or integers
     if(percentage == TRUE){
-      interval_mask_sub_lower <- (effective.lower.int/total)*100
-      interval_mask_sub_upper <- (theoretical.upper.int/total)*100
+      interval_mask_sub_lower <- round((effective.lower.int/total)*100, digits = rounding_digits)
+      interval_mask_sub_upper <- round((theoretical.upper.int/total)*100, digits = rounding_digits)
       interval_mask_sub <- paste0('[', interval_mask_sub_lower, '-', interval_mask_sub_upper, ']')
     } else {
       interval_mask_sub <- paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
@@ -228,7 +229,7 @@ mask_vector <- function(input_vector,
       ## 1. Known quantities: total, sum of not masked values & effective lower bound of the interval.
       ## 2. Unknown: original values.
       ## 3. Substract sum of not masked values + effetive lower bound from total.
-      ## 4. This is the 'remaining quanity'. The original values need to add up to at MOST this.
+      ## 4. This is the 'remaining quantity'. The original values need to add up to at MOST this.
       #     If they add up to something higher, this is incompatible with the information. 
       #     If they add up to something lower, this will be within the interval
       
@@ -255,7 +256,7 @@ mask_vector <- function(input_vector,
       n_impossible <- length(combinations_grid$possible[combinations_grid$possible == 'Impossible'])
       n <- length(combinations_grid$possible)
       
-      perc_impossible <- paste0((n_impossible/n)*100, '%')
+      perc_impossible <- paste0(round((n_impossible/n)*100,digits = rounding_digits), '%')
       
       warning(paste0('This table may not be safe. Of all possible combinations of naively masked values, ', 
                      perc_impossible, ' original value combinations can be excluded'))
@@ -281,25 +282,41 @@ mask_vector <- function(input_vector,
 #' @export
 #'
 #' @examples
-mask_vector_wrapper <- function(tableout, threshold = 5, output_warnings = FALSE){
+mask_vector_wrapper <- function(tableout, threshold = 5, 
+                                output_warnings = FALSE,
+                                table_metadata){
+
+ 
+  table_metadata$index <- 1:nrow(table_metadata)
+  tableout$index <- NA
+  metadata_row <- 1
   
-  # 1. Filter applicable variable types, i.e., leave cat or tf
-  tableout_var <- tableout %>% 
-    as.data.frame() %>% 
-    dplyr::filter(type %in% c('CAT', 'TF'),
-           var != 'I_HIV_ALGO') # IMPORTANT: THIS IS JUST A TEST WORKAROUND.
-  # In the example table I_HIV_ALGO appears twice, which makes the code fail. This seems to be a mistake in the test, so is handled
-  # ad-hoc only
+  for(i in 2:nrow(tableout)){ # starts at 2 on purpose
+    found <- FALSE
+    while(found == FALSE){
+    if(table_metadata$var[metadata_row] == tableout$var[i]){
+      found <- TRUE
+      tableout$index[i] <- table_metadata$ind[metadata_row]
+    } else {
+      metadata_row <- metadata_row + 1
+      found <- FALSE
+      # back again
+    }
+    }
+  }
   
   # 2. Obtain unique variables,
-  variables <- unique(tableout_var$var)
+  variables_index <- base::unique(tableout$index)
   
   # Iterate over variables
-  for(i in seq_along(variables)){
-    var <- variables[i] # Get the variable name
+  for(i in seq_along(variables_index)){
+    var_index <- variables_index[i] # Get the variable name
 
     # Filter table to only that category
-    tableout_reduced <- tableout_var[tableout_var$var == var,]
+    tableout_reduced <- tableout |> dplyr::filter(index == var_index)
+    should_be_masked <- tableout_reduced$type[1] %in% c('TF','CAT')
+    
+    if(should_be_masked){
     # Extract vector of category couns for exposed and control groups, exposed
     v1_control_unmasked <- as.numeric(tableout_reduced$V1_CONTROL)
     v1_exposed_unmasked <- as.numeric(tableout_reduced$V1_EXPOSED)
@@ -312,14 +329,15 @@ mask_vector_wrapper <- function(tableout, threshold = 5, output_warnings = FALSE
     
     # Get row indices of first and last ocurrence of the variable in the 
     # original descriptibles table
-    first_index <- which(tableout$var == var)[1]
-    last_index <- tail(which(tableout$var == var), n = 1)
+    first_index <- which(tableout$index == var_index)[1]
+    last_index <- utils::tail(which(tableout$index == var_index), n = 1)
     
     # Replace appropriate rows and columns, based on index of variable ocurrence and column names
     tableout[first_index:last_index, 'V1_CONTROL'] <- mask_v1_control_masked_int
     tableout[first_index:last_index, 'V1_EXPOSED'] <- mask_v1_exposed_masked_int
     tableout[first_index:last_index, 'V2_CONTROL'] <- mask_v1_control_pcn_int
     tableout[first_index:last_index, 'V2_EXPOSED'] <- mask_v1_exposed_pcn_int
+    }
   }
   
   return(tableout)

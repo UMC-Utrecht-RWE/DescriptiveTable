@@ -49,18 +49,19 @@ tableout <- DescriptivesTable(popdf = popdf,# data object
                   groupcol = "group", # name of column in which group membership can be found
                   output_format = "raw" ,# "processed" or "raw"; raw for debugging only, outputs at earlier step
                   calculate_asd = TRUE, # option; calculate asd and add to table or not
-                  keep_varinfo = FALSE, # FALSE keeps only the end-labels, TRUE also outputs var names etc.
+                  keep_varinfo = TRUE, # FALSE keeps only the end-labels, TRUE also outputs var names etc.
                   label_lookup = label_lookup,
-                  control_types = FALSE, # FALSE keeps only the end-labels, TRUE also outputs var names etc.
+                  control_types = TRUE, # FALSE keeps only the end-labels, TRUE also outputs var names etc.
                   missing_vars = ExpectedMissingVars,
                   missing_flag = -99, # flag numeric for missing variable
-                  round_decimals = 2,
+                  round_decimals = TRUE,
                   use_weights = FALSE,
                   output_asd = FALSE)
 
 # rough version: masking and rounding
 # mask_round_descriptives(tableout)
-tableout <- mask_vector_wrapper(tableout)
+tableout <- mask_vector_wrapper(tableout = tableout, threshold = 5,
+                                table_metadata = table_metadata)
 
 # # for clarity, this is what V1-V3 represent
 setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
