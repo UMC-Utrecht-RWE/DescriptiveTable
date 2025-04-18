@@ -58,16 +58,19 @@ tableout <- DescriptivesTable(popdf = popdf,# data object
                   use_weights = FALSE,
                   output_asd = FALSE)
 
-# rough version: masking and rounding
-# mask_round_descriptives(tableout)
-tableout <- mask_vector_wrapper(tableout = tableout, threshold = 5,
+# Aplly masking
+tableout_masked <- mask_vector_wrapper(tableout = tableout, threshold = 5,
                                 table_metadata = table_metadata)
 
+# Compare both tables
+waldo::compare(tableout,tableout_masked)
+
+
 # # for clarity, this is what V1-V3 represent
-setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
-         c("N_exposed","perc_exposed","aux_exposed",
-           "N_control","perc_control","aux_control")
-)
+#setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
+#         c("N_exposed","perc_exposed","aux_exposed",
+#           "N_control","perc_control","aux_control")
+#)
 
 
 # # ---- other functionality/ things to note 
@@ -79,9 +82,6 @@ setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
 
 # optional masking rules implemented in seperate functions
  # round_to; round to decimal places as chr. string, return <0 if resulting numeric zero
-sapply(tableout$perc_control, function(s) round_to(s,2))
+# sapply(tableout$perc_control, function(s) round_to(s,2))
 
-
- # mask_to ; mask cell counts
-mask_count(tableout$N_control,5)
 

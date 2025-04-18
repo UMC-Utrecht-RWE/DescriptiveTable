@@ -284,6 +284,7 @@ mask_vector <- function(input_vector,
 #' @examples
 mask_vector_wrapper <- function(tableout, threshold = 5, 
                                 output_warnings = FALSE,
+                                rounding_digits = 2,
                                 table_metadata){
 
  
@@ -291,7 +292,7 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
   tableout$index <- NA
   metadata_row <- 1
   
-  for(i in 2:nrow(tableout)){ # starts at 2 on purpose
+  for(i in 2:nrow(tableout)){ # starts at 2 on purpose, because row 1 are totals
     found <- FALSE
     while(found == FALSE){
     if(table_metadata$var[metadata_row] == tableout$var[i]){
@@ -306,7 +307,7 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
   }
   
   # 2. Obtain unique variables,
-  variables_index <- base::unique(tableout$index)
+  variables_index <- na.omit(base::unique(tableout$index))
   
   # Iterate over variables
   for(i in seq_along(variables_index)){
@@ -314,18 +315,47 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
 
     # Filter table to only that category
     tableout_reduced <- tableout |> dplyr::filter(index == var_index)
-    should_be_masked <- tableout_reduced$type[1] %in% c('TF','CAT')
     
-    if(should_be_masked){
+    # Masking applies only to TF and CAT vectors
+    type_should_be_masked <- tableout_reduced$type[1] %in% c('TF','CAT')
+    
+    # For TF, the total is not computed, but taken from row 1
+    is_TF <- tableout_reduced$type[1] == 'TF'
+    
+    if(is_TF){
+      total_control <- as.numeric(tableout[1, 'V1_CONTROL'])
+      total_exposed <- as.numeric(tableout[1, 'V1_EXPOSED'])
+    } else {
+      total_control <- NULL
+      total_exposed <- NULL
+    }
+    
+    if(type_should_be_masked){
     # Extract vector of category couns for exposed and control groups, exposed
     v1_control_unmasked <- as.numeric(tableout_reduced$V1_CONTROL)
     v1_exposed_unmasked <- as.numeric(tableout_reduced$V1_EXPOSED)
     
+  
+   
     # Apply interval mask function
-    mask_v1_control_masked_int <- mask_vector(v1_control_unmasked, threshold = threshold, output_warnings = output_warnings)
-    mask_v1_exposed_masked_int <- mask_vector(v1_exposed_unmasked, threshold = threshold, output_warnings = output_warnings)
-    mask_v1_control_pcn_int <- mask_vector(v1_control_unmasked, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
-    mask_v1_exposed_pcn_int <- mask_vector(v1_exposed_unmasked, threshold = threshold, output_warnings = output_warnings, percentage = TRUE)
+    mask_v1_control_masked_int <- mask_vector(v1_control_unmasked, threshold = threshold, 
+                                              rounding_digits = rounding_digits,
+                                              output_warnings = output_warnings,
+                                              total = total_control)
+    mask_v1_exposed_masked_int <- mask_vector(v1_exposed_unmasked, threshold = threshold, 
+                                              rounding_digits = rounding_digits,
+                                              output_warnings = output_warnings,
+                                              total = total_exposed)
+    mask_v1_control_pcn_int <- mask_vector(v1_control_unmasked, threshold = threshold, 
+                                           rounding_digits = rounding_digits,
+                                           output_warnings = output_warnings, 
+                                           total = total_control,
+                                           percentage = TRUE)
+    mask_v1_exposed_pcn_int <- mask_vector(v1_exposed_unmasked, threshold = threshold, 
+                                           output_warnings = output_warnings, 
+                                           rounding_digits = rounding_digits,
+                                           total = total_exposed,
+                                           percentage = TRUE)
     
     # Get row indices of first and last ocurrence of the variable in the 
     # original descriptibles table
@@ -339,7 +369,8 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
     tableout[first_index:last_index, 'V2_EXPOSED'] <- mask_v1_exposed_pcn_int
     }
   }
-  
+  # drop index column
+  tableout <- tableout |> dplyr::select(-index)
   return(tableout)
   
 }
