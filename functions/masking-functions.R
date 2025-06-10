@@ -202,7 +202,7 @@ mask_vector <- function(input_vector,
   output_vector <- input_vector ## THIS IS THE RETURN VALUE
   
   ####### 6. (OPTIONAL) WARNING
-  #### Why is the masking triggered?
+  #### Why is the warning triggered?
   ## 1. Masking means that values lower than the threshold are mapped to [1,threshold-1]
   ## 2. If multiple values are masked, there're two desirable properties:
   ## 2.a) The masked values cannot be directly computed from the total
