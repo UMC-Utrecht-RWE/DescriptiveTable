@@ -73,7 +73,7 @@ mask_vector <- function(input_vector,
   if(length(input_vector) == 1 & is_exception(input_vector[1])) return(input_vector)
   ## Input may be of length >1, even if there is only one non-exception value
   ## In that case, apply proper masking to that count and leave other values as is
-  if(length(counts) == 1){
+  if(length(counts) == 1 & is.null(total)){
     # Substitute count according to rule
     input_vector[positive_counts_indices] <- ifelse(counts < threshold, below_threshold_sub, counts)
     return(input_vector)
@@ -268,6 +268,7 @@ mask_vector <- function(input_vector,
     }
   }
   
+  
   return(output_vector)
   
 }
@@ -285,33 +286,51 @@ mask_vector <- function(input_vector,
 mask_vector_wrapper <- function(tableout, threshold = 5, 
                                 output_warnings = FALSE,
                                 rounding_digits = 2,
+                                count.names = c('V1_CONTROL', 'V1_EXPOSED'),
+                                pct.names = c('V2_CONTROL', 'V2_EXPOSED'),
                                 table_metadata){
 
  
+  # Gen index in metadata table and output table
   table_metadata$index <- 1:nrow(table_metadata)
   tableout$index <- NA
-  metadata_row <- 1
   
-  for(i in 2:nrow(tableout)){ # starts at 2 on purpose, because row 1 are totals
-    found <- FALSE
-    while(found == FALSE){
-    if(table_metadata$var[metadata_row] == tableout$var[i]){
-      found <- TRUE
-      tableout$index[i] <- table_metadata$ind[metadata_row]
-    } else {
-      metadata_row <- metadata_row + 1
-      found <- FALSE
-      # back again
+  
+  # Start searching from the first row of metadata
+  metadata_row <- 1
+  # Loop through tableout starting from row 2 (row 1 contains totals)
+  for(i in 2:nrow(tableout)){
+    
+    # Skip rows where var is NA or empty string - leave index as NA
+    if(is.na(tableout$var[i]) || tableout$var[i] == ""){
+      next  # Skip to next iteration, leaving tableout$index[i] as NA. Means this rows will not be masked (they are omitted)
     }
+    
+    # Reset found flag for each new variable we're trying to match
+    found <- FALSE
+    # Keep searching until we find a match for the current variable
+    while(found == FALSE){
+      if(table_metadata$var[metadata_row] == tableout$var[i]){ # Check if current metadata variable matches current tableout variableå
+        # Match found! Set flag to exit while loop
+        found <- TRUE
+        # Copy the corresponding index from metadata to tableout
+        tableout$index[i] <- table_metadata$index[metadata_row]
+      } else {
+        # No match - move to next row in metadata table
+        metadata_row <- metadata_row + 1
+        # Note: This assumes every variable in tableout exists in table_metadata
+        # If not, this will cause an infinite loop when metadata_row exceeds table length
+      }
     }
   }
   
-  # 2. Obtain unique variables,
-  variables_index <- na.omit(base::unique(tableout$index))
+  # 2. Obtain unique variables.
+  variables_index <- na.omit(base::unique(tableout$index)) # omits NA values, which correspond to rows that were skipped (e.g., empty var)
   
-  # Iterate over variables
+  # Iterate over variable index and mask each vector/variable
   for(i in seq_along(variables_index)){
-    var_index <- variables_index[i] # Get the variable name
+  #  if(i == 4){browser()}
+    var_index <- variables_index[i] # Get the variable name. Note some might be repeated (same value, but different index)
 
     # Filter table to only that category
     tableout_reduced <- tableout |> dplyr::filter(index == var_index)
@@ -319,42 +338,40 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
     # Masking applies only to TF and CAT vectors
     type_should_be_masked <- tableout_reduced$type[1] %in% c('TF','CAT')
     
-    # For TF, the total is not computed, but taken from row 1
+    # For TF or cat with one category, the total is not computed, but taken from row 1
     is_TF <- tableout_reduced$type[1] == 'TF'
     
-    if(is_TF){
-      total_control <- as.numeric(tableout[1, 'V1_CONTROL'])
-      total_exposed <- as.numeric(tableout[1, 'V1_EXPOSED'])
+    if(is_TF | nrow(tableout_reduced) == 1){
+      total_count1 <- as.numeric(tableout[1, count.names[1]]) # because total is in row 1
+      total_count2 <- as.numeric(tableout[1, count.names[2]])
     } else {
-      total_control <- NULL
-      total_exposed <- NULL
+      total_count1 <- NULL
+      total_count2 <- NULL
     }
     
     if(type_should_be_masked){
     # Extract vector of category couns for exposed and control groups, exposed
-    v1_control_unmasked <- as.numeric(tableout_reduced$V1_CONTROL)
-    v1_exposed_unmasked <- as.numeric(tableout_reduced$V1_EXPOSED)
-    
-  
-   
+    counts.1 <- as.numeric(tableout_reduced[[count.names[1]]])
+    counts.2 <- as.numeric(tableout_reduced[[count.names[2]]])
+
     # Apply interval mask function
-    mask_v1_control_masked_int <- mask_vector(v1_control_unmasked, threshold = threshold, 
+    masked.counts.1 <- mask_vector(counts.1, threshold = threshold, 
                                               rounding_digits = rounding_digits,
                                               output_warnings = output_warnings,
-                                              total = total_control)
-    mask_v1_exposed_masked_int <- mask_vector(v1_exposed_unmasked, threshold = threshold, 
+                                              total = total_count1)
+    masked.counts.2 <- mask_vector(counts.2, threshold = threshold, 
                                               rounding_digits = rounding_digits,
                                               output_warnings = output_warnings,
-                                              total = total_exposed)
-    mask_v1_control_pcn_int <- mask_vector(v1_control_unmasked, threshold = threshold, 
+                                              total = total_count2)
+    masked.pcts.1 <- mask_vector(counts.1, threshold = threshold, 
                                            rounding_digits = rounding_digits,
                                            output_warnings = output_warnings, 
-                                           total = total_control,
+                                           total = total_count1,
                                            percentage = TRUE)
-    mask_v1_exposed_pcn_int <- mask_vector(v1_exposed_unmasked, threshold = threshold, 
+    masked.pcts.2 <- mask_vector(counts.2, threshold = threshold, 
                                            output_warnings = output_warnings, 
                                            rounding_digits = rounding_digits,
-                                           total = total_exposed,
+                                           total = total_count2,
                                            percentage = TRUE)
     
     # Get row indices of first and last ocurrence of the variable in the 
@@ -363,10 +380,10 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
     last_index <- utils::tail(which(tableout$index == var_index), n = 1)
     
     # Replace appropriate rows and columns, based on index of variable ocurrence and column names
-    tableout[first_index:last_index, 'V1_CONTROL'] <- mask_v1_control_masked_int
-    tableout[first_index:last_index, 'V1_EXPOSED'] <- mask_v1_exposed_masked_int
-    tableout[first_index:last_index, 'V2_CONTROL'] <- mask_v1_control_pcn_int
-    tableout[first_index:last_index, 'V2_EXPOSED'] <- mask_v1_exposed_pcn_int
+    tableout[first_index:last_index, count.names[1]] <- masked.counts.1
+    tableout[first_index:last_index, count.names[2]] <- masked.counts.2
+    tableout[first_index:last_index, pct.names[1]] <- masked.pcts.1
+    tableout[first_index:last_index, pct.names[2]] <- masked.pcts.2
     }
   }
   # drop index column
