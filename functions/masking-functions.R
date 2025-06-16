@@ -41,6 +41,7 @@ mask_vector <- function(input_vector,
                         percentage = FALSE,
                         total = NULL){
   
+
   ###### 1. IDENTIFY COUNTS AND INGORE EXCEPTIONS #####
   # Flag positive integers (equivalently, non-exceptions values)
   positive_counts_indices <- !sapply(input_vector, is_exception)
@@ -290,7 +291,8 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
                                 pct.names = c('V2_CONTROL', 'V2_EXPOSED'),
                                 table_metadata){
 
- 
+  tableout <- as.data.frame(tableout)
+  table_metada <- as.data.frame(table_metadata)
   # Gen index in metadata table and output table
   table_metadata$index <- 1:nrow(table_metadata)
   tableout$index <- NA
@@ -341,6 +343,7 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
     # For TF or cat with one category, the total is not computed, but taken from row 1
     is_TF <- tableout_reduced$type[1] == 'TF'
     
+      
     if(is_TF | nrow(tableout_reduced) == 1){
       total_count1 <- as.numeric(tableout[1, count.names[1]]) # because total is in row 1
       total_count2 <- as.numeric(tableout[1, count.names[2]])

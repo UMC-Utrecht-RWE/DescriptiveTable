@@ -1,4 +1,6 @@
-
+require(stddiff)
+require(data.table)
+require(stringr)
 ###############################################
 # INPUT: D4_MSC_Baseline<Type>_T0, D4_MSC_PriorAESI
 # OUTPUT: Table 2, 3, 4, and 5
@@ -67,8 +69,8 @@ for (metadata_file in metadata_files) {
   
   # Filter table_metadata for rows where expectedCat starts with "get "
   metadata_filtered <- table_metadata |>
-    dplyr::filter(str_starts(expectedCat, "get ")) |>
-    dplyr::mutate(category_name = str_remove(expectedCat, "get "))  # Extract name after "get "
+    dplyr::filter(stringr::str_starts(expectedCat, "get ")) |>
+    dplyr::mutate(category_name = stringr::str_remove(expectedCat, "get "))  # Extract name after "get "
   
   
   # Initialize a vector to keep track of created objects
@@ -110,11 +112,11 @@ for (metadata_file in metadata_files) {
   }
   
   # Make sure columns have the right format
-  D4_MSC_Baseline <- convert_types(D4_MSC_Baseline, as.data.table(table_metadata))
+  D4_MSC_Baseline <- convert_types(D4_MSC_Baseline, data.table::as.data.table(table_metadata))
   
   # Create descriptive table with SV_REGION and SV_SES_STATUS
-  tableout <- DescriptivesTable(popdf = as.data.table(D4_MSC_Baseline), # data object
-                                table_metadata = as.data.table(table_metadata), # specification of table
+  tableout <- DescriptivesTable(popdf = data.table::as.data.table(D4_MSC_Baseline), # data object
+                                table_metadata = data.table::as.data.table(table_metadata), # specification of table
                                 groupcol = "group", # name of column in which group membership can be found
                                 output_format = output_format ,# "processed" or "raw"; raw for debugging only, outputs at earlier step
                                 calculate_asd = TRUE, # option; calculate asd and add to table or not
