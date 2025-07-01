@@ -1,0 +1,18 @@
+var;type;expectedCat;label;parent;parent_cat;header;check_missingness_ps
+SV_AGE;NUM1;NA;Age (years);NA;NA;Demographics;FALSE
+SV_AGE_CAT;CAT;1,2,3,4,5,6,7,8,9,10,11;Age group (years);NA;NA;NA;FALSE
+SV_SEX;CAT;F;Female;NA;NA;NA;FALSE
+POSSIBLE_PREGNANT;TF;TRUE;Females aged 15 to 55 years;NA;NA;NA;FALSE
+SV_PREG_STATUS;TF;TRUE;Pregnancy Status;POSSIBLE_PREGNANT;TRUE;NA;FALSE
+SV_PREG_TRIMESTER;CAT;1,2,3;Trimester;SV_PREG_STATUS;TRUE;NA;FALSE
+SV_REGION;CAT;get dap_georegion_cats;Geographic region;NA;NA;NA;FALSE
+SV_SES_STATUS;CAT;0,1,2,3,4,5;Socioeconomic status;NA;NA;NA;FALSE
+CALENDAR_QUARTER;CAT;get study_quarters_all;Date of vaccination;NA;NA;NA;FALSE
+SV_SMOKING_STATUS;CAT;0,1,2,3,4;Smoking Status;NA;NA;Personal lifestyle characteristics;TRUE
+SV_BMI_3YEARS;CAT;0,1,2,3,4;BMI;NA;NA;NA;TRUE
+SV_OBESITY;TF;TRUE;Obesity diagnosis or obesity surgery;NA;NA;NA;FALSE
+SV_HU_PRIOR_HOSP_NUM;CAT;0,1,2;Number of hospitalisations;NA;NA;Healthcare utilisation;FALSE
+SV_HU_PRIOR_ED_NUM;CAT;0,1,2;Number of emergency department visits;NA;NA;NA;FALSE
+SV_HU_PRIOR_PC_NUM;CAT;0,1,2;Primary care visits;NA;NA;NA;FALSE
+SV_HU_PRIOR_CS_NUM;CAT;0,1,2;Cancer screening;NA;NA;NA;FALSE
+SV_HU_PRIOR_ANY_COVID_TEST;CAT;0,1,2,3;COVID-19 tests;NA;NA;NA;FALSE

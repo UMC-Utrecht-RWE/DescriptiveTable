@@ -1,0 +1,60 @@
+VarName,category,VarLabel,value
+SV_AGE_CAT,5-11,Age groups (years),1
+SV_AGE_CAT,12-15,Age groups (years),2
+SV_AGE_CAT,16-17,Age groups (years),3
+SV_AGE_CAT,18-29,Age groups (years),4
+SV_AGE_CAT,30-39,Age groups (years),5
+SV_AGE_CAT,40-49,Age groups (years),6
+SV_AGE_CAT,50-59,Age groups (years),7
+SV_AGE_CAT,60-64,Age groups (years),8
+SV_AGE_CAT,65-69,Age groups (years),9
+SV_AGE_CAT,70-79,Age groups (years),10
+SV_AGE_CAT,80+,Age groups (years),11
+SV_SEX,Female,Female,F
+SV_PREG_TRIMESTER,Unknown,Pregnancy status,0
+SV_PREG_TRIMESTER,First trimester,Pregnancy status,1
+SV_PREG_TRIMESTER,Second trimester,Pregnancy status,2
+SV_PREG_TRIMESTER,Third trimester,Pregnancy status,3
+CALENDAR_QUARTER,1 Jul–30 Sep 2022,Date of vaccination,2022_3
+CALENDAR_QUARTER,1 Oct–31 Dec 2022,Date of vaccination,2022_4
+CALENDAR_QUARTER,1 Jan–31 Mar 2023,Date of vaccination,2023_1
+CALENDAR_QUARTER,1 Apr–30 Jun 2023,Date of vaccination,2023_2
+CALENDAR_QUARTER,1 Jul–30 Sep 2023,Date of vaccination,2023_3
+CALENDAR_QUARTER,1 Oct–31 Dec 2023,Date of vaccination,2023_4
+CALENDAR_QUARTER,1 Jan–31 Mar 2024,Date of vaccination,2024_1
+CALENDAR_QUARTER,1 Apr–30 Jun 2024,Date of vaccination,2024_2
+CALENDAR_QUARTER,1 Jul–30 Sep 2024,Date of vaccination,2024_3
+SV_REGION,NA,Geographic region,get dictionary
+SV_SMOKING_STATUS,Unknown,Smoking status,0
+SV_SMOKING_STATUS,Never,Smoking status,1
+SV_SMOKING_STATUS,Former,Smoking status,2
+SV_SMOKING_STATUS,Current,Smoking status,3
+SV_SMOKING_STATUS,Never or former,Smoking status,4
+SV_BMI_3YEARS,Underweight (BMI <20kg/m2),Body mass index (BMI),1
+SV_BMI_3YEARS,Normal weight (BMI 20 to < 25kg/m2),Body mass index (BMI),2
+SV_BMI_3YEARS,Overweight (BMI 25 to < 30kg/m2),Body mass index (BMI),3
+SV_BMI_3YEARS,Obese (BMI ≥ 30kg/m2),Body mass index (BMI),4
+SV_BMI_3YEARS,BMI missing,Body mass index (BMI),0
+SV_OBESITY,Obesity diagnosis or obesity surgery,Body mass index (BMI),TRUE
+SV_HU_PRIOR_HOSP_NUM,0,Number of hospitalisations,0
+SV_HU_PRIOR_HOSP_NUM,1,Number of hospitalisations,1
+SV_HU_PRIOR_HOSP_NUM,2+,Number of hospitalisations,2
+SV_HU_PRIOR_ED_NUM,0,Number of emergency department visits,0
+SV_HU_PRIOR_ED_NUM,1,Number of emergency department visits,1
+SV_HU_PRIOR_ED_NUM,2+,Number of emergency department visits,2
+SV_HU_PRIOR_PC_NUM,0,Primary care visits,0
+SV_HU_PRIOR_PC_NUM,1,Primary care visits,1
+SV_HU_PRIOR_PC_NUM,2+,Primary care visits,2
+SV_HU_PRIOR_CS_NUM,0,Cancer screening,0
+SV_HU_PRIOR_CS_NUM,1,Cancer screening,1
+SV_HU_PRIOR_CS_NUM,2+,Cancer screening,2
+SV_HU_PRIOR_ANY_COVID_TEST,0,COVID-19 tests,0
+SV_HU_PRIOR_ANY_COVID_TEST,1-2,COVID-19 tests,1
+SV_HU_PRIOR_ANY_COVID_TEST,3-4,COVID-19 tests,2
+SV_HU_PRIOR_ANY_COVID_TEST,5+,COVID-19 tests,3
+CHARLSON_INDEX,0 or 1,Charlson Comorbidity Index score,0
+CHARLSON_INDEX,2,Charlson Comorbidity Index score,1
+CHARLSON_INDEX,≥3,Charlson Comorbidity Index score,2
+CDC_RISK,Group 0 (no conditions),CDC at-risk group,0
+CDC_RISK,Group 1 (1 condition),CDC at-risk group,1
+CDC_RISK,Group 2 (>1 condition),CDC at-risk group,2

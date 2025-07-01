@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+.output/example
+.output/example_extended/
+apply-given-tables/

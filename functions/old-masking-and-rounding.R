@@ -32,7 +32,6 @@ mask_count <- function(x, number = 5){
   }))
 }
 
-
 # overall function to mask baseline descriptives coming from DescriptivesTable
 mask_round_descriptives <- function(raw_table, number =5, nsmall =1){
   
