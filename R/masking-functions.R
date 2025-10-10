@@ -218,7 +218,7 @@ mask_vector <- function(input_vector,
   ## Besides, the warning shows which value combinations of the original counts are not
   ## compatible with the reported masked table
   
-  if(output_warnings == TRUE) {
+  if(output_warnings == TRUE & length(counts)>1) {
     ## Warning is triggered if 
     ### a) the effective lower int and theoretical.lower.int are not equal OR
     ### b) all the values are naively masked. In this case, if the total is known, not all original value combinations are possible

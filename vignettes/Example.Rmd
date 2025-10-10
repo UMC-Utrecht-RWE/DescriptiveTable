@@ -1,0 +1,130 @@
+---
+title: "Example"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(DescriptiveTable)
+require(stddiff)
+require(data.table)
+require(stringr)
+```
+
+Note stddiff, data.table and stringr are required. 
+
+This vignette illustrates the use of the DescriptivesTable function to create a baseline descriptives table, and the masking functions to mask small cell counts.
+
+## Setup
+
+This code reflects a common setup, assuming a certain workflow and file structure. This may need to be adapted to different use cases.
+```{r}
+# settings
+DAP <- "TEST1"
+
+# global parameters (interact with get() in table metadata)
+study_quarters_all <- c("2021 Q1",
+"2021 Q2",
+"2021 Q3",
+"2021 Q4",
+"2022 Q1",
+"2022 Q2",
+"2022 Q3",
+"2022 Q4",
+"2023 Q1")
+
+
+# load helper information on what variables are expected to be missing in the DAP
+ExpectedMissingVars <- data.table::fread(
+    system.file("extdata/example/", "ExpectedMissingVariables.csv", package = "DescriptiveTable"))
+ExpectedMissingVars <- ExpectedMissingVars[get(DAP) %in% TRUE, VarName]
+
+# load helper information value-labels of categorical variables
+label_lookup <- readRDS(
+  system.file("extdata/example/", "label_lookup.rds", package = "DescriptiveTable"))
+
+# load specification of the table
+# "parent" variables and categories determine the denominator used to compute percentages for that variable
+table_metadata <- fread(
+  system.file('extdata/example/', 'BaselineDescriptives_metadata.csv', package = 'DescriptiveTable'))
+  
+
+# read dataset of interest
+popdf <- readRDS(
+  system.file("extdata/example/", "example_cohort_dataset.rds", package = "DescriptiveTable"))
+```
+
+
+## Create Baseline Descriptive tables
+
+The function DescriptivesTable creates a baseline descriptive table, stratified by a grouping variable. Here, we illustrate its use with a toy dataset. You can check function options by typing ?DescriptivesTable in the R console.
+
+```{r, eval = FALSE}
+# create table
+tableout <- DescriptivesTable(popdf = popdf,# data object
+                  table_metadata = table_metadata, # specification of table
+                  groupcol = "group", # name of column in which group membership can be found
+                  output_format = "raw" ,# "processed" or "raw"; raw for debugging only, outputs at earlier step
+                  calculate_asd = TRUE, # option; calculate asd and add to table or not
+                  keep_varinfo = TRUE, # FALSE keeps only the end-labels, TRUE also outputs var names etc.
+                  label_lookup = label_lookup,
+                  control_types = TRUE, # FALSE keeps only the end-labels, TRUE also outputs var names etc.
+                  missing_vars = ExpectedMissingVars,
+                  missing_flag = -99, # flag numeric for missing variable
+                  round_decimals = TRUE,
+                  use_weights = FALSE,
+                  output_asd = FALSE)
+```
+
+## Apply masking
+
+A wrapper function mask_vector_wrapper applies the masking function to all relevant columns of the descriptive table. Here, we illustrate its use with a threshold of 5. You can check function options by typing ?mask_vector_wrapper in the R console.
+The wrapper is built on top of the function mask_vector, which can be used to mask individual vectors. You can check function options by typing ?mask_vector in the R console.
+
+
+```{r, eval = FALSE}
+# Aplly masking
+tableout_masked <- mask_vector_wrapper(tableout = tableout, threshold = 5,
+                                table_metadata = table_metadata)
+```
+
+We would always recommend to compare the original and masked tables to ensure that masking has been applied correctly, and to check for possible bugs. The function status should be considered experimental.
+
+```{r, eval = FALSE}
+# Compare both tables
+waldo::compare(tableout,tableout_masked)
+```
+
+This are other things that are worth exploring with the table
+```{r, eval = FALSE}
+# # for clarity, this is what V1-V3 represent
+setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
+        c("N_exposed","perc_exposed","aux_exposed",
+          "N_control","perc_control","aux_control")
+)
+
+
+# # ---- other functionality/ things to note 
+# optional; re-arranging of columns to sensible order
+tableout[,c("label",paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"))]
+
+
+# ----- basic post-processing -----
+
+# optional masking rules implemented in seperate functions
+ # round_to; round to decimal places as chr. string, return <0 if resulting numeric zero
+# sapply(tableout$perc_control, function(s) round_to(s,2))
+```
+
+## Extended example
+
