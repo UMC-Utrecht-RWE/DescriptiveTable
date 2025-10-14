@@ -1,3 +1,23 @@
+#' @description
+#' Format numbers by adding thousand separators 
+#' and rouding to a relevant decimals
+#' @param vec a numeric or integer vector
+#' @param big_mark_seperator a separator for every thousand
+#' @param nsmall a number of decimal digitsto show
+format_num <- function(vec,
+                       big_mark_seperator = ",",
+                       nsmall = 2) {
+  if (is.integer(vec)) vec <- formatC(vec, big.mark = big_mark_seperator)
+  if (is.numeric(vec)) {
+    vec <- formatC(vec,
+                   big.mark = big_mark_seperator,
+                   format = "f",
+                   digits = nsmall
+    )
+  }
+  return(vec)
+}
+
 #' Helper: check if the value for the count is equal to one of the exception values 
 #' (i.e., not a valid positive count)
 #'
@@ -37,11 +57,16 @@ is_exception <- function(value){
 mask_vector <- function(input_vector, 
                         threshold = 5, 
                         rounding_digits = 2,
+                        big_mark_seperator = ",",
                         output_warnings = TRUE, 
                         percentage = FALSE,
                         total = NULL){
   
-
+  # Allow a wide format data frame or data table input by changing into a matrix
+  if(is.data.frame(input_vector)|data.table::is.data.table(input_vector)){
+    input_vector <- t(input_vector)[,1]
+  }
+  
   ###### 1. IDENTIFY COUNTS AND INGORE EXCEPTIONS #####
   # Flag positive integers (equivalently, non-exceptions values)
   positive_counts_indices <- !sapply(input_vector, is_exception)
@@ -53,14 +78,23 @@ mask_vector <- function(input_vector,
   
   # If not provided, compute total as the sum of each category
   if(is.null(total)){
-  total <- sum(counts)
+    total <- sum(counts)
   } 
   
   # Create string to replace masked values below the threshold. String is different depending on whether result is
   # integers or percentages.
   if(percentage){
-    below_threshold_pcn_lower <- round((1/total)*100, digits = rounding_digits)
-    below_threshold_pcn_upper <- round(((threshold-1)/total)*100, digits = rounding_digits)
+    below_threshold_pcn_lower <- format_num(
+      (1/total)*100, 
+      big_mark_seperator = ",",
+      nsmall = rounding_digits
+    )
+    below_threshold_pcn_upper <- format_num(
+      ((threshold-1)/total)*100, 
+      big_mark_seperator = ",",
+      nsmall = rounding_digits
+    )
+    
     below_threshold_sub <- paste0('[',below_threshold_pcn_lower, '-' , below_threshold_pcn_upper, ']')
   } else {
     below_threshold_sub <- paste0('[1-', threshold-1, ']')
@@ -101,7 +135,7 @@ mask_vector <- function(input_vector,
   
   # Compute number of masked values, needed for both warnings and computing bounds of masked interval
   n_masked <- sum(naively_masked_logical) 
-
+  
   # Interval masking is only applied when both conditions are true: 
   # 1) not all values are naively masked
   # 2) at least one value is naively masked, i.e., not all values are unmasked (in which case nothing is necessary)
@@ -177,19 +211,39 @@ mask_vector <- function(input_vector,
     effective.lower.int <- max(theoretical.lower.int, threshold)
     
     ####### MASK INTERVAL ##########
-  
     ### First, generate string for substitution.
     ## String depends on whether output is percentage or integers
     if(percentage == TRUE){
-      interval_mask_sub_lower <- round((effective.lower.int/total)*100, digits = rounding_digits)
-      interval_mask_sub_upper <- round((theoretical.upper.int/total)*100, digits = rounding_digits)
+      interval_mask_sub_lower <- format_num(
+        (effective.lower.int/total)*100, 
+        big_mark_seperator = ",",
+        nsmall = rounding_digits
+      )
+      interval_mask_sub_upper <- format_num(
+        (theoretical.upper.int/total)*100, 
+        big_mark_seperator = ",",
+        nsmall = rounding_digits
+      )
       interval_mask_sub <- paste0('[', interval_mask_sub_lower, '-', interval_mask_sub_upper, ']')
     } else {
       interval_mask_sub <- paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
     }
     
     ### Then, substitute value in masked counts
-    masked_counts[interval_masked_index] <- interval_mask_sub
+    if(percentage){
+      masked_counts <- ifelse(
+        masked_counts %in% masked_counts[interval_masked_index],
+        interval_mask_sub, 
+        format_num(
+          masked_counts, 
+          big_mark_seperator = ",",
+          nsmall = rounding_digits
+        )
+      )
+    } else {
+      masked_counts[interval_masked_index] <- interval_mask_sub
+    }
+    
     
   }
   
@@ -218,7 +272,7 @@ mask_vector <- function(input_vector,
   ## Besides, the warning shows which value combinations of the original counts are not
   ## compatible with the reported masked table
   
-  if(output_warnings == TRUE) {
+  if(output_warnings == TRUE & length(counts)>1) {
     ## Warning is triggered if 
     ### a) the effective lower int and theoretical.lower.int are not equal OR
     ### b) all the values are naively masked. In this case, if the total is known, not all original value combinations are possible
@@ -235,7 +289,7 @@ mask_vector <- function(input_vector,
       #     If they add up to something lower, this will be within the interval
       
       ## Note: if all values are naively masked, the original values need to add up exactly to the total. 
-   
+      
       if(any(not_naively_masked_logical)) {
         maximum_to_split <- total - sum(not_masked_values) - effective.lower.int}
       
@@ -257,7 +311,14 @@ mask_vector <- function(input_vector,
       n_impossible <- length(combinations_grid$possible[combinations_grid$possible == 'Impossible'])
       n <- length(combinations_grid$possible)
       
-      perc_impossible <- paste0(round((n_impossible/n)*100,digits = rounding_digits), '%')
+      perc_impossible <- paste0(
+        format_num(
+          (n_impossible/n)*100, 
+          big_mark_seperator = ",",
+          nsmall = rounding_digits
+        ), 
+        '%'
+      )
       
       warning(paste0('This table may not be safe. Of all possible combinations of naively masked values, ', 
                      perc_impossible, ' original value combinations can be excluded'))
