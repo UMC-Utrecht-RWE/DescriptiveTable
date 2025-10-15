@@ -501,6 +501,7 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
 
 mask_row_table <- function(input_row_table,
                            maskcols = c(),
+                           newcolnames = NULL,
                            threshold = 5,
                            rounding_digits = 2,
                            big_mark_seperator = "",
@@ -532,6 +533,10 @@ mask_row_table <- function(input_row_table,
         )
         )
       ), .SDcols = maskcols]
+  
+  if(!is.null(newcolnames)){
+    data.table::setnames(thisdat, maskcols, newcolnames)
+  }
   
   # covert to data.frame if the input was not data.table.
   if(!data.table::is.data.table(input_row_table)){
