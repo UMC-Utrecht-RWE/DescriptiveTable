@@ -526,6 +526,7 @@ mask_row_table <- function(input_row_table,
                       threshold = threshold,
                       rounding_digits = rounding_digits,
                       big_mark_seperator = big_mark_seperator,
+                      percentage = percentage,
                       output_warnings = output_warnings,
                       total = NULL)
         )
