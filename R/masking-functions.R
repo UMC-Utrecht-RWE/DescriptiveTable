@@ -9,10 +9,12 @@ format_num <- function(vec,
                        rounding_digits = 2) {
   if (is.integer(vec)) vec <- formatC(vec, big.mark = big_mark_seperator)
   if (is.numeric(vec)) {
-    vec <- formatC(vec,
-                   big.mark = big_mark_seperator,
-                   format = "f",
-                   digits = rounding_digits
+    vec <- ifelse(vec == 0, 
+                  "0", 
+                  formatC(vec,
+                          big.mark = big_mark_seperator,
+                          format = "f",
+                          digits = rounding_digits)
     )
   }
   return(vec)
@@ -529,7 +531,8 @@ mask_row_table <- function(input_row_table,
                       big_mark_seperator = big_mark_seperator,
                       percentage = percentage,
                       output_warnings = output_warnings,
-                      total = NULL)
+                      total = NULL,
+                      print = TRUE)
         )
         )
       ), .SDcols = maskcols]
@@ -543,5 +546,5 @@ mask_row_table <- function(input_row_table,
     thisdat <- data.frame(thisdat)
   }
   
-  return(print(thisdat))
+  if(print) print(thisdat) else invisible(thisdat)
 }
