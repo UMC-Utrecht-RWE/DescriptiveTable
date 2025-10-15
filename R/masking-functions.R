@@ -62,11 +62,6 @@ mask_vector <- function(input_vector,
                         percentage = FALSE,
                         total = NULL){
   
-  # Allow a wide format data frame or data table input by changing into a matrix
-  if(is.data.frame(input_vector)|data.table::is.data.table(input_vector)){
-    input_vector <- t(input_vector)[,1]
-  }
-  
   ###### 1. IDENTIFY COUNTS AND INGORE EXCEPTIONS #####
   # Flag positive integers (equivalently, non-exceptions values)
   positive_counts_indices <- !sapply(input_vector, is_exception)
@@ -74,13 +69,28 @@ mask_vector <- function(input_vector,
   counts <- as.numeric(input_vector[positive_counts_indices])
   # Masking is applied to numerical counts. Exception values are left unchanged.
   
-  ##### 2. CREATE STRING TO SUBSTITUTE VALUES BELOW THRESHOLD
-  
   # If not provided, compute total as the sum of each category
   if(is.null(total)){
     total <- sum(counts)
   } 
   
+  # IF nothing to be masked, return input_vector with formatting.
+  # This ensure vectors that need a masking procedure will be in a string format.
+  if(all(input_vector >= threshold | input_vector < 1)){
+    if(percentage){
+      return(
+        format_num(
+          (input_vector/total)*100, 
+          big_mark_seperator = big_mark_seperator,
+          rounding_digits = rounding_digits
+        )
+      )
+    } else {
+      return(formatC(input_vector, big.mark = big_mark_seperator))
+    }
+  }
+  
+  ##### 2. CREATE STRING TO SUBSTITUTE VALUES BELOW THRESHOLD
   # Create string to replace masked values below the threshold. String is different depending on whether result is
   # integers or percentages.
   if(percentage){
@@ -101,7 +111,7 @@ mask_vector <- function(input_vector,
   }
   
   
-  ###### 3. HANDLE INPUTS OF LENGTH 1 
+  ###### 3. HANDLE INPUTS OF LENGTH 1
   
   # Handle inputs of length 1: types TF or cat with one category
   ## If the input is an exception left as is
@@ -365,6 +375,7 @@ mask_vector <- function(input_vector,
 mask_vector_wrapper <- function(tableout, threshold = 5, 
                                 output_warnings = FALSE,
                                 rounding_digits = 2,
+                                big_mark_seperator = "",
                                 count.names = c('V1_CONTROL', 'V1_EXPOSED'),
                                 pct.names = c('V2_CONTROL', 'V2_EXPOSED'),
                                 table_metadata){
@@ -438,19 +449,23 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
       # Apply interval mask function
       masked.counts.1 <- mask_vector(counts.1, threshold = threshold, 
                                      rounding_digits = rounding_digits,
+                                     big_mark_seperator = big_mark_seperator,
                                      output_warnings = output_warnings,
                                      total = total_count1)
       masked.counts.2 <- mask_vector(counts.2, threshold = threshold, 
                                      rounding_digits = rounding_digits,
+                                     big_mark_seperator = big_mark_seperator,
                                      output_warnings = output_warnings,
                                      total = total_count2)
       masked.pcts.1 <- mask_vector(counts.1, threshold = threshold, 
                                    rounding_digits = rounding_digits,
+                                   big_mark_seperator = big_mark_seperator,
                                    output_warnings = output_warnings, 
                                    total = total_count1,
                                    percentage = TRUE)
       masked.pcts.2 <- mask_vector(counts.2, threshold = threshold, 
                                    output_warnings = output_warnings, 
+                                   big_mark_seperator = big_mark_seperator,
                                    rounding_digits = rounding_digits,
                                    total = total_count2,
                                    percentage = TRUE)
@@ -471,4 +486,56 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
   tableout <- tableout |> dplyr::select(-index)
   return(tableout)
   
+}
+
+
+
+#' @description
+#' A wrapper function for mask_vector() that allows a wide format data frame
+#' or data table input and apply masking across a set of columns for every row.
+#' The output returns the input data of the same format with the specified columns masked.
+#' 
+#' @param input_row_table a data set where each column contains a variable to be masked
+#' @param maskcols a string vector with the column names for the variables that 
+#' should be masked together for the secondary data disclosure
+
+mask_row_table <- function(input_row_table,
+                           maskcols = c(),
+                           threshold = 5,
+                           rounding_digits = 2,
+                           big_mark_seperator = "",
+                           output_warnings = TRUE,
+                           percentage = FALSE,
+                           total = NULL){
+  
+  # check the input format
+  if(!(is.data.frame(input_row_table)|
+       data.table::is.data.table(input_row_table))) {
+    stop("Your input for masking is not a data.frame or data.table.")
+  }
+  
+  # ensure data.table format
+  thisdat <- data.table::data.table(input_row_table)
+  
+  # mask across the columns for each row
+  thisdat[
+    , (maskcols) :=
+      data.table::as.data.table(
+        t(apply(.SD, 1, function(row) 
+          mask_vector(row,
+                      threshold = threshold,
+                      rounding_digits = rounding_digits,
+                      big_mark_seperator = big_mark_seperator,
+                      output_warnings = output_warnings,
+                      total = NULL)
+        )
+        )
+      ), .SDcols = maskcols]
+  
+  # covert to data.frame if the input was not data.table.
+  if(!data.table::is.data.table(input_row_table)){
+    thisdat <- data.frame(thisdat)
+  }
+  
+  return(print(thisdat))
 }
