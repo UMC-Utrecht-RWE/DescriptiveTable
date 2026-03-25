@@ -17,6 +17,7 @@
 #'
 #' @returns
 #' @export
+#' @import data.table
 #'
 #' @examples
 DescriptivesTable <- function(

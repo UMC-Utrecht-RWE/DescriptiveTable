@@ -1,0 +1,44 @@
+var;type;expectedCat;label;parent;parent_cat;header
+L_CALENDAR_QUARTER_COV;CAT;get study_quarters_all;Calendar quarter at index date;NA;NA;NA
+LOOKBACK_DUR;NUM1;NA;Duration of lookback period;NA;NA;NA
+L_AGE_COV;NUM1;NA;Age at index date (years);NA;NA;NA
+L_AGE_COV_CAT;CAT;1,2,3,4,5,6,7,8;Age group (years);NA;NA;NA
+L_SEX_COV;CAT;1;Sex, female;NA;NA;NA
+L_PREGNANT_COV;TF;NA;Pregnant at cohort entry;NA;NA;NA
+L_PREGNANTTRIM_COV;CAT;1,2,3;Trimester;L_PREGNANT_COV;TRUE;NA
+PREG_QUALITY;CAT;1,2,3,4;Pregnancy ConcePTION level of certainty;L_PREGNANT_COV;TRUE;NA
+IM_IMMUNCOMPR_COV;TF;NA;Immunocompromised state, any of the below is 'yes';NA;NA;NA
+IM_TRANSPLANTRECIPIENT_COV;TF;NA;Organ transplant recipient;NA;NA;NA
+ONC_HAEMAT_COV;TF;NA;Specific haematological neoplasias;NA;NA;NA
+I_HIV_ALGO;TF;NA;Human immunodeficiency virus (HIV) infection;NA;NA;NA
+IM_IMMUNODEFWITHOUTHIV_COV;TF;NA;Other congenital or acquired immunodeficiencies or immunosuppressive diseases;NA;NA;NA
+DP_IMMUNOSUPR_ALGO;TF;NA;Recent or current use of immunosuppressive medications (e.g., cytotoxic chemotherapy, biologic immunomodulatory therapies, azathioprine, methotrexate, chronic corticosteroid use);NA;NA;NA
+I_COVID19DX_COV_CAT;CAT;0,1,2;Previous COVID-19 infection;NA;NA;NA
+SEVERE_COVID_RISKFACTOR_ALGO;TF;NA;Presence of one or more risk factors for severe COVID-19,  any of the below is 'yes';NA;NA;NA
+ONC_ANYMALIGNANCYALGORITHM_COV;TF;NA;Cancer;NA;NA;NA
+B_SICKLECELLALGORITHM_COV;TF;NA;Sickle cell disease;NA;NA;NA
+L_OBESITYALGORITHM_COV;TF;NA;Obesity;NA;NA;NA
+G_KDCHRONIC_COV;TF;NA;Chronic kidney disease;NA;NA;NA
+R_RESPCHRONICALGORITHM_COV;TF;NA;Chronic respiratory disease;NA;NA;NA
+I_HIV_ALGO;TF;NA;Human immunodeficiency virus (HIV) infection;NA;NA;NA
+E_DM12ALGORITHM_COV;TF;NA;Diabetes (type 1 or 2);NA;NA;NA
+D_LIVERCHRONICALONE_COV;TF;NA;Chronic liver disease;NA;NA;NA
+O_DOWN_COV;TF;NA;Down syndrome;NA;NA;NA
+C_CVD_COV;TF;NA;Cardiovascular disease;NA;NA;NA
+N_STROKE_COV;TF;NA;Stroke/brain injury;NA;NA;NA
+N_DEMENTIA_COV;TF;NA;Dementia;NA;NA;NA
+MENT_MENTALHEALTHDISEASE_COV;TF;NA;Mental health disorders;NA;NA;NA
+C_CAD_AESI;TF;NA;Acute coronary syndrome (exclusion for cardiac/cardiovascular events);NA;NA;NA
+R_COPD_COV;TF;NA;Chronic obstructive pulmonary disease;NA;NA;NA
+PRIOR_THROMBOSIS_ALGO;TF;NA;Prior thrombosis;NA;NA;NA
+IM_ANAPHYLAXIS_AESI;TF;NA;History of anaphylaxis;NA;NA;NA
+IM_ALLERGY_COV;TF;NA;History of any type of allergic reaction;NA;NA;NA
+C_HF_COV;TF;NA;Heart failure;NA;NA;NA
+H_HOSPNUM_COV;CAT;0,1,2;Number of hospitalisations;NA;NA;Health Care Utilisation in the year before the index date
+H_PRIMARYHCUSE_COV;CAT;0,1,2;Number of GP-visits;NA;NA;NA
+H_NUMDISPENS_COV;CAT;0,1,2;Number of different dispensed/prescribed drugs ATC Level 5 dispensed;NA;NA;NA
+H_HOSPNUM_COV_4W;CAT;0,1,2;Number of hospitalisations;NA;NA;Health Care Utilisation in the 4 weeks before the index date
+H_PRIMARYHCUSE_COV_4W;CAT;0,1,2;Number of GP-visits;NA;NA;NA
+H_NUMDISPENS_COV_4W;CAT;0,1,2;Number of different dispensed/prescribed drugs ATC Level 5 dispensed;NA;NA;NA
+FRAILTY_SCORE_ALGO;NUM2;NA;Frailty score;NA;NA;NA
+FRAILTY_SCORE_ALGO_CAT;CAT;1,2,3,4;Frailty score category;NA;NA;NA

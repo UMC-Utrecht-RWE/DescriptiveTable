@@ -1,0 +1,6 @@
+^scripts$
+^data-raw$
+^analysis$
+^\.github$
+^.*\.Rproj$
+^\.Rproj\.user$

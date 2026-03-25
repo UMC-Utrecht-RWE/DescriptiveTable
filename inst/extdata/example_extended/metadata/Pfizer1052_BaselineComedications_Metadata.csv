@@ -1,0 +1,22 @@
+var;type;expectedCat;label;parent;parent_cat;header;check_missingness_ps
+CU_ANALGESICS;TF;TRUE;Analgesics;NA;NA;Comedications;FALSE
+CU_ANTIBIOTICS;TF;TRUE;Antibiotics;NA;NA;NA;FALSE
+CU_ANTIVIRAL;TF;TRUE;Antiviral medications;NA;NA;NA;FALSE
+CU_CORTICOSTEROIDS;TF;TRUE;Corticosteroids;NA;NA;NA;FALSE
+CU_AINES;TF;TRUE;Non-steroidal anti-inflammatory drugs;NA;NA;NA;FALSE
+CU_PSYCHOTROPICS;TF;TRUE;Psychotropics;NA;NA;NA;FALSE
+CU_STATINS;TF;TRUE;Statins;NA;NA;NA;FALSE
+CU_ORAL_ANTICOAGULANTS;TF;TRUE;Novel oral anticoagulants;NA;NA;NA;FALSE
+CU_WARFARIN;TF;TRUE;Warfarin;NA;NA;NA;FALSE
+SV_VP_INF;TF;TRUE;Influenza;NA;NA;Other vaccines;FALSE
+SV_VP_PNC;TF;TRUE;Pneumococcal;NA;NA;NA;FALSE
+SV_VP_DTP;TF;TRUE;DTP (diphtheria, tetanus, and pertussis);NA;NA;NA;FALSE
+SV_VP_TPV;TF;TRUE;TPV (polio);NA;NA;NA;FALSE
+SV_VP_MMR;TF;TRUE;MMR (measles, mumps and rubella);NA;NA;NA;FALSE
+SV_VP_HIB;TF;TRUE;Hib (Haemophilus influenzae type b);NA;NA;NA;FALSE
+SV_VP_HB;TF;TRUE;HepB (hepatitis B virus);NA;NA;NA;FALSE
+SV_VP_VZV;TF;TRUE;VZV (varicella-zoster virus);NA;NA;NA;FALSE
+SV_VP_HZ;TF;TRUE;HZ (herpes-zoster virus);NA;NA;NA;FALSE
+SV_VP_HPV;TF;TRUE;HPV (human papillomavirus);NA;NA;NA;FALSE
+SV_VP_MNG;TF;TRUE;Meningococcal;NA;NA;NA;FALSE
+SV_VP_ROT;TF;TRUE;Rotavirus;NA;NA;NA;FALSE
