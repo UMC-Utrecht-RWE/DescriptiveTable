@@ -1,10 +1,6 @@
 ---
-title: "Example"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Example}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+title: "DescriptiveTable"
+output: github_document
 ---
 
 ```{r, include = FALSE}
@@ -17,20 +13,27 @@ knitr::opts_chunk$set(
 **DescriptiveTable** is an R package for creating tables of baselines descriptives (sometimes referred to as 'Table 1' in epidemiological research settings). The package is developed and maintained by the Real World Evidence (RWE) research group at UMCU. 
 
 The inputs required are:
+
 1) a dataset with rows equal to units from one or more groups, and columns equal to covariates (with a group identifier)
+
 2) a metadata file defining the output table; which variables should be included, if any nesting of counts should be done, what information should be displayed, what text labels each variable should have
 
 Based on these inputs, `DescriptivesTable()` outputs a baseline descriptives table: A table describing, for one or more groups, descriptive statistics such as cell counts, means, medians and quantiles, for a list of different covariates. These tables typically are used to characterize the covariate distribution in a population, or describe differences in covariate distributions between two groups. 
 
-```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
-knitr::include_graphics("../inst/extdata/table1.png")
+```{r pressure, echo=FALSE, fig.cap="Table shell example of baseline descriptives", out.width = '100%'}
+knitr::include_graphics("inst/extdata/table1.png")
 ```
 
 Although multiple packages exist for creating such tables, this package was developed to incorporate a variety of specific needs for RWE, such as:
+
 1) The calculation of **absolute standardized differences** (ASDs) to compare variables of different types across groups (using the `stddiff` package)
+
 2) The calculation of **weighted** ASDs (using, e.g., IPT weights) using custom functions
+
 3) **Masking** of cell counts smaller than a pre-specific integer to comply with privacy regulations
+
 4) Specification of different nesting structures, headings and display names using a flexible **metadata** format
+
 5) Wrangling of large datasets using `data.table`
 
 # Using the package
@@ -56,6 +59,7 @@ devtools::install_github("UMC-Utrecht-RWE/DescriptiveTable")
 ```
 
 There are currently three main packages on which `DescriptiveTable` depends.
+
  - `stddiff` provides functions for computing (unweighted) ASDs
  - `data.table` is the basis for how the input datasets are manipulated
  - `stringr` is used internally for regular expressions
@@ -70,7 +74,9 @@ require(stringr)
 ## Inputs
 
 The inputs required are:
+
 1) a dataset with rows equal to units from one or more group, and columns equal to covariates (with a group identifier)
+
 2) a metadata file defining the output table; which variables should be included, if any nesting of counts should be done, what information should be displayed, what text labels each variable should have
 
 In addition to these two required inputs, there are a number of optional inputs which we will describe.
@@ -89,9 +95,10 @@ head(popdf[,1:7])
 ### Metadata
 
 `DescriptiveTable` uses a metadata file to specify the desired output. The metadata file contains one row per variable to be included in the table, in order of display, and defines the following columns:
+
   - `var` the name of the variable (column) in the input covariate dataset
   - `type` determines how the input variable is treated - how the ASD is computed, and what type of information is displayed. The options are `TF` (binary, true/false, count for TRUE displayed), `CAT` (categorical), `NUM1` (numeric, display mean and SD on one row, median Q1 and Q3 on second) or `NUM2` (numeric, display median Q1 Q3 on one row, min-max on second).
-  - `expectedCat` defines which category values should be displayed in the table. Can be a string listing category values of interest, or a string of format `get <object_name>` where `<object_name>` is a vector in the global environment containing all category valeus to be listed.
+  - `expectedCat` defines which category values should be displayed in the table. Can be a string listing category values of interest, or a string of format `get <object_name>` where `<object_name>` is a vector in the global environment containing all category values to be listed.
   - `label` what display name to give this variable.
   - `parent` and `parent_cat` defines the denominator for cell counts. By default, `parent = NA` means the overall table total is used as a denominator. Otherwise a parent `var` name must be specified, with a corresponding parent variable category.
   - `header` defines an optional header string to be displayed before this variable, for instance, if a cluster of related variables are to be displayed
@@ -149,7 +156,7 @@ ExpectedMissingVars <- ExpectedMissingVars[get(DAP) %in% TRUE, VarName]
 
 The function `DescriptivesTable()` creates a baseline descriptives table, stratified by a grouping variable. Here, we illustrate its use with the example inputs specified above. You can check function options by typing ?DescriptivesTable in the R console.
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 # create table
 tableout <- DescriptivesTable(popdf = popdf,# data object
                   table_metadata = table_metadata, # specification of table
@@ -166,14 +173,18 @@ tableout <- DescriptivesTable(popdf = popdf,# data object
 
 print(tableout[,c("label",paste0("V", 1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"), "asd_1")])
 
-# explanation of what the column names mean
-# setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
-#         c("N_exposed","perc_exposed","aux_exposed",
-#           "N_control","perc_control","aux_control")
-# )
 ```
 
-Notice that the table contains all of the numeric information we need, but that the table would still need to be processed for aesthetics to be "report-ready". We do not currently have functionality developed for this post-processing (merging columns, changing column names, adding indents, dropping unneeded columns etc.). 
+Notice that the table contains all of the numeric information we need, but that the table would still need to be processed for aesthetics to be "report-ready". For instance, the column names are not particularly informative, nor are the row labels formatted (bold, indented) as needed. We do not currently have functionality developed for this post-processing (merging columns, changing column names, adding indents, dropping unneeded columns etc.). 
+
+Note that currently columns can contain a mix of information depending on what the metadata specifies. To guide interpretation, we could rename the columns, which always follow the following scheme. By default, there will be two columns specifying the N count (V1) and corresponding percentage (V2) per group for a category or variable. If NUM1 or NUM2 type specified in the metadata, then these columns will contain, e.g., means and SDs, or median, Q1 and Q3 quartiles.  When three pieces of information are requested (e.g., Q3 being the third) this is stored in Q3. A more informative naming scheme would be as follows
+
+```{r}
+setnames(tableout,c(paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL")),
+        c("N_exposed","perc_exposed","aux_exposed",
+          "N_control","perc_control","aux_control")
+)
+```
 
 The remainder of this readme will examine additional tools and operations in the package.
 
@@ -186,14 +197,15 @@ A wrapper function mask_vector_wrapper applies the masking function to all relev
 The wrapper is built on top of the function mask_vector, which can be used to mask individual vectors. You can check function options by typing ?mask_vector in the R console.
 
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 # Aplly masking
 tableout_masked <- mask_vector_wrapper(tableout = tableout, threshold = 5,
                                 table_metadata = table_metadata,
-                                count.names = c('V1_CONTROL', 'V1_EXPOSED'),
-                                pct.names = c('V2_CONTROL', 'V2_EXPOSED'),)
+                                count.names = c('N_exposed', 'perc_exposed'),
+                                pct.names = c('N_control', 'perc_control'),)
 
-print(tableout_masked[c(1:5, 97:101),c("label",paste0("V", 1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"), "asd_1")])
+print(tableout_masked[c(1:5, 97:101),c("label", c("N_exposed","perc_exposed","aux_exposed",
+          "N_control","perc_control","aux_control"), "asd_1")])
 ```
 
 We would always recommend to compare the original and masked tables to ensure that masking has been applied correctly, and to check for possible bugs. The function status should be considered experimental.
@@ -202,24 +214,4 @@ We would always recommend to compare the original and masked tables to ensure th
 # Compare both tables
 waldo::compare(tableout,tableout_masked)
 ```
-
-This are other things that are worth exploring with the table
-```{r, eval = FALSE}
-# # for clarity, this is what V1-V3 represent
-
-
-
-# # ---- other functionality/ things to note 
-# optional; re-arranging of columns to sensible order
-tableout[,c("label",paste0("V",1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"))]
-
-
-# ----- basic post-processing -----
-
-# optional masking rules implemented in seperate functions
- # round_to; round to decimal places as chr. string, return <0 if resulting numeric zero
-# sapply(tableout$perc_control, function(s) round_to(s,2))
-```
-
-## Extended example
 
