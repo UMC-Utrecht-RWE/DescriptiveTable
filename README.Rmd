@@ -206,8 +206,8 @@ The wrapper is built on top of the function mask_vector, which can be used to ma
 # Aplly masking
 tableout_masked <- mask_vector_wrapper(tableout = tableout, threshold = 5,
                                 table_metadata = table_metadata,
-                                count.names = c('N_exposed', 'N_control'),
-                                pct.names = c('perc_control', 'perc_exposed'),)
+                                count.names = c('N_control', 'N_exposed'),
+                                pct.names = c('perc_control', 'perc_exposed'))
 
 print(tableout_masked[c(1:5, 97:101),c("label", c("N_exposed","perc_exposed","aux_exposed",
           "N_control","perc_control","aux_control"), "asd_1")])
