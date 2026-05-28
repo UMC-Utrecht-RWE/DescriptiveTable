@@ -1,9 +1,9 @@
 Package: DescriptiveTable
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Flexible creation of baseline descriptive tables
+Version: 0.2.1
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Oisin", "Ryan", , "o.ryan@umcutrecht.nl", role = c("aut", "cre"))
+Description: Package to create baseline descriptives tables ("table 1" in epidemiology circles) and calculate associated statistics such as absolute standardized differences.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
