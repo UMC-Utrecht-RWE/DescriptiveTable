@@ -87,10 +87,8 @@ require(stddiff)
 #> Loading required package: stddiff
 require(data.table)
 #> Loading required package: data.table
-#> Warning: package 'data.table' was built under R version 4.4.3
 require(stringr)
 #> Loading required package: stringr
-#> Warning: package 'stringr' was built under R version 4.4.1
 ```
 
 ## Inputs
@@ -110,11 +108,11 @@ inputs which we will describe.
 ### Covariate Dataset
 
 The main input is a dataset containing information on different
-covariates. Each row of this dataset is treated as a seperate unit. The
-columns define the covariates to be described in the output table, and
-an identifier column for group membership. An example is included in the
-R package for your use, with a large number of columns for testing
-purposes
+covariates. Each row of this dataset is treated as a separate unit. The
+columns define the covariates potentially to be described in the output
+table, and an identifier column for group membership. An example is
+included in the R package for your use, with a large number of columns
+for testing purposes
 
 ``` r
 # read dataset of interest
@@ -148,11 +146,13 @@ table, in order of display, and defines the following columns:
 
 - `var` the name of the variable (column) in the input covariate dataset
 - `type` determines how the input variable is treated - how the ASD is
-  computed, and what type of information is displayed. The options are
-  `TF` (binary, true/false, count for TRUE displayed), `CAT`
-  (categorical), `NUM1` (numeric, display mean and SD on one row, median
-  Q1 and Q3 on second) or `NUM2` (numeric, display median Q1 Q3 on one
-  row, min-max on second).
+  computed, and what type of information is displayed. The options are:
+  - `TF` (binary, true/false, count for TRUE displayed),
+  - `CAT` (categorical, display count and percentage),
+  - `NUM1` (numeric, display mean and SD on one row, median Q1 and Q3 on
+    second) or
+  - `NUM2` (numeric, display median Q1 Q3 on one row, min-max on
+    second).
 - `expectedCat` defines which category values should be displayed in the
   table. Can be a string listing category values of interest, or a
   string of format `get <object_name>` where `<object_name>` is a vector
@@ -241,10 +241,10 @@ ExpectedMissingVars <- ExpectedMissingVars[get(DAP) %in% TRUE, VarName]
 
 ## Create Baseline Descriptive tables
 
-The function `DescriptivesTable()` creates a baseline descriptives
-table, stratified by a grouping variable. Here, we illustrate its use
-with the example inputs specified above. You can check function options
-by typing ?DescriptivesTable in the R console.
+The function `DescriptivesTable()` creates a baseline descriptive table,
+stratified by a grouping variable. Here, we illustrate its use with the
+example inputs specified above. You can check function options by typing
+?DescriptivesTable in the R console.
 
 ``` r
 # create table
@@ -291,12 +291,12 @@ print(tableout[,c("label",paste0("V", 1:3,"_EXPOSED"), paste0("V",1:3,"_CONTROL"
 ```
 
 Notice that the table contains all of the numeric information we need,
-but that the table would still need to be processed for aesthetics to be
-“report-ready”. For instance, the column names are not particularly
-informative, nor are the row labels formatted (bold, indented) as
-needed. We do not currently have functionality developed for this
-post-processing (merging columns, changing column names, adding indents,
-dropping unneeded columns etc.).
+but that the table would still need to be processed for aesthetic
+reasons to be “report-ready”. For instance, the column names are not
+particularly informative, nor are the row labels formatted (bold,
+indented) as needed. We do not currently have functionality developed
+for this post-processing (merging columns, changing column names, adding
+indents, dropping unneeded columns etc.).
 
 Note that currently columns can contain a mix of information depending
 on what the metadata specifies. To guide interpretation, we could rename
@@ -325,6 +325,10 @@ alternative value. Typically we aim to mask sub-category counts below a
 certain threshold, very often 5. The information which replaces cell
 values less than 5 is an interval 1-4.
 
+Counts are also masked if at least one such small value exists, then one
+additional large count (the largest one) is also masked into an interval
+to prevent back-calculating the small values from the total.
+
 A wrapper function mask_vector_wrapper applies the masking function to
 all relevant columns of the descriptive table. Here, we illustrate its
 use with a threshold of 5. You can check function options by typing
@@ -340,33 +344,33 @@ typing ?mask_vector in the R console.
 # Aplly masking
 tableout_masked <- mask_vector_wrapper(tableout = tableout, threshold = 5,
                                 table_metadata = table_metadata,
-                                count.names = c('N_exposed', 'perc_exposed'),
-                                pct.names = c('N_control', 'perc_control'),)
+                                count.names = c('N_control', 'N_exposed'),
+                                pct.names = c('perc_control', 'perc_exposed'))
 
 print(tableout_masked[c(1:5, 97:101),c("label", c("N_exposed","perc_exposed","aux_exposed",
           "N_control","perc_control","aux_control"), "asd_1")])
-#>                              label N_exposed perc_exposed aux_exposed
-#> 1                            Total        26         <NA>          NA
-#> 2   Calendar quarter at index date      <NA>         <NA>          NA
-#> 3                          2021 Q1         0            0          NA
-#> 4                          2021 Q2         0            0          NA
-#> 5                          2021 Q3         0            0          NA
-#> 97          Frailty score category      <NA>         <NA>          NA
-#> 98                         0 - < 1         0            0          NA
-#> 99                         1 - < 2   [22-25]      [96-99]          NA
-#> 100                        2 - < 3     [1-4]        [1-4]          NA
-#> 101                      3 or more         0            0          NA
-#>         N_control perc_control aux_control asd_1
-#> 1              26         <NA>          NA    NA
-#> 2            <NA>         <NA>          NA     0
-#> 3               0            0          NA    NA
-#> 4               0            0          NA    NA
-#> 5               0            0          NA    NA
-#> 97           <NA>         <NA>          NA     0
-#> 98              0            0          NA    NA
-#> 99  [84.62-96.15]      [96-99]          NA    NA
-#> 100  [3.85-15.38]        [1-4]          NA    NA
-#> 101             0            0          NA    NA
+#>                              label N_exposed  perc_exposed aux_exposed
+#> 1                            Total        26          <NA>          NA
+#> 2   Calendar quarter at index date      <NA>          <NA>          NA
+#> 3                          2021 Q1         0             0          NA
+#> 4                          2021 Q2         0             0          NA
+#> 5                          2021 Q3         0             0          NA
+#> 97          Frailty score category      <NA>          <NA>          NA
+#> 98                         0 - < 1         0             0          NA
+#> 99                         1 - < 2   [22-25] [84.62-96.15]          NA
+#> 100                        2 - < 3     [1-4]  [3.85-15.38]          NA
+#> 101                      3 or more         0             0          NA
+#>     N_control  perc_control aux_control asd_1
+#> 1          26          <NA>          NA    NA
+#> 2        <NA>          <NA>          NA     0
+#> 3           0             0          NA    NA
+#> 4           0             0          NA    NA
+#> 5           0             0          NA    NA
+#> 97       <NA>          <NA>          NA     0
+#> 98          0             0          NA    NA
+#> 99    [22-25] [84.62-96.15]          NA    NA
+#> 100     [1-4]  [3.85-15.38]          NA    NA
+#> 101         0             0          NA    NA
 ```
 
 We would always recommend to compare the original and masked tables to
