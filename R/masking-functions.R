@@ -1,3 +1,25 @@
+#' @description
+#' Format numbers by adding thousand separators 
+#' and rounding to a relevant decimal
+#' @param vec a numeric or integer vector
+#' @param big_mark_seperator a separator for every thousand
+#' @param rounding_digits a number of decimal digits to show
+format_num <- function(vec,
+                       big_mark_seperator = "",
+                       rounding_digits = 2) {
+  if (is.integer(vec)) vec <- formatC(vec, big.mark = big_mark_seperator)
+  if (is.numeric(vec)) {
+    vec <- ifelse(vec == 0, 
+                  "0", 
+                  formatC(vec,
+                          big.mark = big_mark_seperator,
+                          format = "f",
+                          digits = rounding_digits)
+    )
+  }
+  return(vec)
+}
+
 #' Helper: check if the value for the count is equal to one of the exception values 
 #' (i.e., not a valid positive count)
 #'
@@ -37,11 +59,11 @@ is_exception <- function(value){
 mask_vector <- function(input_vector, 
                         threshold = 5, 
                         rounding_digits = 2,
+                        big_mark_seperator = "",
                         output_warnings = TRUE, 
                         percentage = FALSE,
                         total = NULL){
   
-
   ###### 1. IDENTIFY COUNTS AND INGORE EXCEPTIONS #####
   # Flag positive integers (equivalently, non-exceptions values)
   positive_counts_indices <- !sapply(input_vector, is_exception)
@@ -49,34 +71,65 @@ mask_vector <- function(input_vector,
   counts <- as.numeric(input_vector[positive_counts_indices])
   # Masking is applied to numerical counts. Exception values are left unchanged.
   
-  ##### 2. CREATE STRING TO SUBSTITUTE VALUES BELOW THRESHOLD
-  
   # If not provided, compute total as the sum of each category
   if(is.null(total)){
-  total <- sum(counts)
+    total <- sum(counts)
   } 
   
+  # IF nothing to be masked, return input_vector with formatting.
+  # This ensure vectors that need a masking procedure will be in a string format.
+  if(all(input_vector >= threshold | input_vector < 1)){
+    if(percentage){
+      return(
+        format_num(
+          (input_vector/total)*100, 
+          big_mark_seperator = big_mark_seperator,
+          rounding_digits = rounding_digits
+        )
+      )
+    } else {
+      return(formatC(input_vector, big.mark = big_mark_seperator))
+    }
+  }
+  
+  ##### 2. CREATE STRING TO SUBSTITUTE VALUES BELOW THRESHOLD
   # Create string to replace masked values below the threshold. String is different depending on whether result is
   # integers or percentages.
   if(percentage){
-    below_threshold_pcn_lower <- round((1/total)*100, digits = rounding_digits)
-    below_threshold_pcn_upper <- round(((threshold-1)/total)*100, digits = rounding_digits)
+    below_threshold_pcn_lower <- format_num(
+      (1/total)*100, 
+      big_mark_seperator = big_mark_seperator,
+      rounding_digits = rounding_digits
+    )
+    below_threshold_pcn_upper <- format_num(
+      ((threshold-1)/total)*100, 
+      big_mark_seperator = big_mark_seperator,
+      rounding_digits = rounding_digits
+    )
+    
     below_threshold_sub <- paste0('[',below_threshold_pcn_lower, '-' , below_threshold_pcn_upper, ']')
   } else {
     below_threshold_sub <- paste0('[1-', threshold-1, ']')
   }
   
   
-  ###### 3. HANDLE INPUTS OF LENGTH 1 
+  ###### 3. HANDLE INPUTS OF LENGTH 1
   
   # Handle inputs of length 1: types TF or cat with one category
   ## If the input is an exception left as is
-  if(length(input_vector) == 1 & is_exception(input_vector[1])) return(input_vector)
+  if(length(input_vector) == 1 & is_exception(input_vector[1])) {
+    return(formatC(input_vector, big.mark = big_mark_seperator))
+  }
+  
   ## Input may be of length >1, even if there is only one non-exception value
   ## In that case, apply proper masking to that count and leave other values as is
   if(length(counts) == 1 & is.null(total)){
     # Substitute count according to rule
-    input_vector[positive_counts_indices] <- ifelse(counts < threshold, below_threshold_sub, counts)
+    input_vector[positive_counts_indices] <- ifelse(
+      counts < threshold, 
+      below_threshold_sub, 
+      formatC(counts, big.mark = big_mark_seperator)
+    )
     return(input_vector)
   }
   
@@ -101,7 +154,7 @@ mask_vector <- function(input_vector,
   
   # Compute number of masked values, needed for both warnings and computing bounds of masked interval
   n_masked <- sum(naively_masked_logical) 
-
+  
   # Interval masking is only applied when both conditions are true: 
   # 1) not all values are naively masked
   # 2) at least one value is naively masked, i.e., not all values are unmasked (in which case nothing is necessary)
@@ -177,20 +230,50 @@ mask_vector <- function(input_vector,
     effective.lower.int <- max(theoretical.lower.int, threshold)
     
     ####### MASK INTERVAL ##########
-  
     ### First, generate string for substitution.
     ## String depends on whether output is percentage or integers
     if(percentage == TRUE){
-      interval_mask_sub_lower <- round((effective.lower.int/total)*100, digits = rounding_digits)
-      interval_mask_sub_upper <- round((theoretical.upper.int/total)*100, digits = rounding_digits)
+      interval_mask_sub_lower <- format_num(
+        (effective.lower.int/total)*100, 
+        big_mark_seperator = big_mark_seperator,
+        rounding_digits = rounding_digits
+      )
+      interval_mask_sub_upper <- format_num(
+        (theoretical.upper.int/total)*100, 
+        big_mark_seperator = big_mark_seperator,
+        rounding_digits = rounding_digits
+      )
       interval_mask_sub <- paste0('[', interval_mask_sub_lower, '-', interval_mask_sub_upper, ']')
     } else {
-      interval_mask_sub <- paste0('[',effective.lower.int, '-', theoretical.upper.int, ']')
+      interval_mask_sub <- paste0(
+        '[',
+        formatC(effective.lower.int, big.mark = big_mark_seperator),
+        '-', 
+        formatC(theoretical.upper.int, big.mark = big_mark_seperator),
+        ']'
+      )
     }
     
     ### Then, substitute value in masked counts
-    masked_counts[interval_masked_index] <- interval_mask_sub
-    
+    if(percentage){
+      masked_counts <- ifelse(
+        masked_counts %in% masked_counts[interval_masked_index],
+        interval_mask_sub, 
+        format_num(
+          masked_counts, 
+          big_mark_seperator =big_mark_seperator,
+          rounding_digits = rounding_digits
+        )
+      )
+    } else {
+      masked_counts <- ifelse(
+        # for the values to be masked
+        seq_along(masked_counts) %in% interval_masked_index,
+        # replace them with the matching ones saved in 'interval_masked_index'
+        interval_mask_sub[match(seq_along(masked_counts), interval_masked_index)],
+        masked_counts
+      )
+    }
   }
   
   ###### 4.2. APPLY 'NAIVE' MASKING
@@ -235,7 +318,7 @@ mask_vector <- function(input_vector,
       #     If they add up to something lower, this will be within the interval
       
       ## Note: if all values are naively masked, the original values need to add up exactly to the total. 
-   
+      
       if(any(not_naively_masked_logical)) {
         maximum_to_split <- total - sum(not_masked_values) - effective.lower.int}
       
@@ -257,7 +340,14 @@ mask_vector <- function(input_vector,
       n_impossible <- length(combinations_grid$possible[combinations_grid$possible == 'Impossible'])
       n <- length(combinations_grid$possible)
       
-      perc_impossible <- paste0(round((n_impossible/n)*100,digits = rounding_digits), '%')
+      perc_impossible <- paste0(
+        format_num(
+          (n_impossible/n)*100, 
+          big_mark_seperator = big_mark_seperator,
+          rounding_digits = rounding_digits
+        ), 
+        '%'
+      )
       
       warning(paste0('This table may not be safe. Of all possible combinations of naively masked values, ', 
                      perc_impossible, ' original value combinations can be excluded'))
@@ -287,10 +377,11 @@ mask_vector <- function(input_vector,
 mask_vector_wrapper <- function(tableout, threshold = 5, 
                                 output_warnings = FALSE,
                                 rounding_digits = 2,
+                                big_mark_seperator = "",
                                 count.names = c('V1_CONTROL', 'V1_EXPOSED'),
                                 pct.names = c('V2_CONTROL', 'V2_EXPOSED'),
                                 table_metadata){
-
+  
   tableout <- as.data.frame(tableout)
   table_metada <- as.data.frame(table_metadata)
   # Gen index in metadata table and output table
@@ -331,9 +422,9 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
   
   # Iterate over variable index and mask each vector/variable
   for(i in seq_along(variables_index)){
-  #  if(i == 4){browser()}
+    #  if(i == 4){browser()}
     var_index <- variables_index[i] # Get the variable name. Note some might be repeated (same value, but different index)
-
+    
     # Filter table to only that category
     tableout_reduced <- tableout |> dplyr::filter(index == var_index)
     
@@ -343,7 +434,7 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
     # For TF or cat with one category, the total is not computed, but taken from row 1
     is_TF <- tableout_reduced$type[1] == 'TF'
     
-      
+    
     if(is_TF | nrow(tableout_reduced) == 1){
       total_count1 <- as.numeric(tableout[1, count.names[1]]) # because total is in row 1
       total_count2 <- as.numeric(tableout[1, count.names[2]])
@@ -353,44 +444,107 @@ mask_vector_wrapper <- function(tableout, threshold = 5,
     }
     
     if(type_should_be_masked){
-    # Extract vector of category couns for exposed and control groups, exposed
-    counts.1 <- as.numeric(tableout_reduced[[count.names[1]]])
-    counts.2 <- as.numeric(tableout_reduced[[count.names[2]]])
-
-    # Apply interval mask function
-    masked.counts.1 <- mask_vector(counts.1, threshold = threshold, 
-                                              rounding_digits = rounding_digits,
-                                              output_warnings = output_warnings,
-                                              total = total_count1)
-    masked.counts.2 <- mask_vector(counts.2, threshold = threshold, 
-                                              rounding_digits = rounding_digits,
-                                              output_warnings = output_warnings,
-                                              total = total_count2)
-    masked.pcts.1 <- mask_vector(counts.1, threshold = threshold, 
-                                           rounding_digits = rounding_digits,
-                                           output_warnings = output_warnings, 
-                                           total = total_count1,
-                                           percentage = TRUE)
-    masked.pcts.2 <- mask_vector(counts.2, threshold = threshold, 
-                                           output_warnings = output_warnings, 
-                                           rounding_digits = rounding_digits,
-                                           total = total_count2,
-                                           percentage = TRUE)
-    
-    # Get row indices of first and last ocurrence of the variable in the 
-    # original descriptibles table
-    first_index <- which(tableout$index == var_index)[1]
-    last_index <- utils::tail(which(tableout$index == var_index), n = 1)
-    
-    # Replace appropriate rows and columns, based on index of variable ocurrence and column names
-    tableout[first_index:last_index, count.names[1]] <- masked.counts.1
-    tableout[first_index:last_index, count.names[2]] <- masked.counts.2
-    tableout[first_index:last_index, pct.names[1]] <- masked.pcts.1
-    tableout[first_index:last_index, pct.names[2]] <- masked.pcts.2
+      # Extract vector of category couns for exposed and control groups, exposed
+      counts.1 <- as.numeric(tableout_reduced[[count.names[1]]])
+      counts.2 <- as.numeric(tableout_reduced[[count.names[2]]])
+      
+      # Apply interval mask function
+      masked.counts.1 <- mask_vector(counts.1, threshold = threshold, 
+                                     rounding_digits = rounding_digits,
+                                     big_mark_seperator = big_mark_seperator,
+                                     output_warnings = output_warnings,
+                                     total = total_count1)
+      masked.counts.2 <- mask_vector(counts.2, threshold = threshold, 
+                                     rounding_digits = rounding_digits,
+                                     big_mark_seperator = big_mark_seperator,
+                                     output_warnings = output_warnings,
+                                     total = total_count2)
+      masked.pcts.1 <- mask_vector(counts.1, threshold = threshold, 
+                                   rounding_digits = rounding_digits,
+                                   big_mark_seperator = big_mark_seperator,
+                                   output_warnings = output_warnings, 
+                                   total = total_count1,
+                                   percentage = TRUE)
+      masked.pcts.2 <- mask_vector(counts.2, threshold = threshold, 
+                                   output_warnings = output_warnings, 
+                                   big_mark_seperator = big_mark_seperator,
+                                   rounding_digits = rounding_digits,
+                                   total = total_count2,
+                                   percentage = TRUE)
+      
+      # Get row indices of first and last ocurrence of the variable in the 
+      # original descriptibles table
+      first_index <- which(tableout$index == var_index)[1]
+      last_index <- utils::tail(which(tableout$index == var_index), n = 1)
+      
+      # Replace appropriate rows and columns, based on index of variable ocurrence and column names
+      tableout[first_index:last_index, count.names[1]] <- masked.counts.1
+      tableout[first_index:last_index, count.names[2]] <- masked.counts.2
+      tableout[first_index:last_index, pct.names[1]] <- masked.pcts.1
+      tableout[first_index:last_index, pct.names[2]] <- masked.pcts.2
     }
   }
   # drop index column
   tableout <- tableout |> dplyr::select(-index)
   return(tableout)
   
+}
+
+
+
+#' @description
+#' A wrapper function for mask_vector() that allows a wide format data frame
+#' or data table input and apply masking across a set of columns for every row.
+#' The output returns the input data of the same format with the specified columns masked.
+#' 
+#' @param input_row_table a data set where each column contains a variable to be masked
+#' @param maskcols a string vector with the column names for the variables that 
+#' should be masked together for the secondary data disclosure
+
+mask_row_table <- function(input_row_table,
+                           maskcols = c(),
+                           newcolnames = NULL,
+                           threshold = 5,
+                           rounding_digits = 2,
+                           big_mark_seperator = "",
+                           output_warnings = TRUE,
+                           percentage = FALSE,
+                           total = NULL){
+  
+  # check the input format
+  if(!(is.data.frame(input_row_table)|
+       data.table::is.data.table(input_row_table))) {
+    stop("Your input for masking is not a data.frame or data.table.")
+  }
+  
+  # ensure data.table format
+  thisdat <- data.table::data.table(input_row_table)
+  
+  # mask across the columns for each row
+  thisdat[
+    , (maskcols) :=
+      data.table::as.data.table(
+        t(apply(.SD, 1, function(row) 
+          mask_vector(row,
+                      threshold = threshold,
+                      rounding_digits = rounding_digits,
+                      big_mark_seperator = big_mark_seperator,
+                      percentage = percentage,
+                      output_warnings = output_warnings,
+                      total = NULL,
+                      print = TRUE)
+        )
+        )
+      ), .SDcols = maskcols]
+  
+  if(!is.null(newcolnames)){
+    data.table::setnames(thisdat, maskcols, newcolnames)
+  }
+  
+  # covert to data.frame if the input was not data.table.
+  if(!data.table::is.data.table(input_row_table)){
+    thisdat <- data.frame(thisdat)
+  }
+  
+  if(print) print(thisdat) else invisible(thisdat)
 }

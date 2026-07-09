@@ -23,7 +23,7 @@ test_that("masking a numerical vector returns correct output", {
   expect_equal(mask_vector(c(0, 1,2,1,1), threshold = 7, output_warnings = F), c(0,'[1-6]', '[1-6]', '[1-6]', '[1-6]'))
   
   # No count needs to be masked
-  expect_equal(mask_vector(c(6, 97, 100)), c(6,97,100))
+  expect_equal(mask_vector(c(6, 97, 100)), as.character(c(6,97,100)))
 })
 
 
