@@ -1,0 +1,60 @@
+# Tests for weighted counts and descriptive statistics
+#
+# Functions under test:
+#   R/count_weighted_functions.R
+#   R/DescriptivesTable.R  (use_weighted_stats argument)
+#
+# Run with devtools::test(), or devtools::load_all() before sourcing this file
+library(testthat)
+library(data.table)
+
+# Example cohort with 2 tretment groups
+cohort <- data.table(
+  group = rep(c("EXPOSED", "CONTROL"), each = 4),
+  w = c(1, 2, 3, 4, 4, 3, 2, 1),
+  age = c(10, 20, 30, 40, 10, 20, 30, 40),
+  sex = c("F", "F", "M", "M", "F", "M", "M", "F"),
+  sick = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
+  severity = c("mild", NA, "severe", NA, "mild", NA, "severe", NA)
+)
+
+metadata <- data.table(
+  var = c("age", "sex", "sick", "severity"),
+  type = c("NUM1", "CAT", "TF", "CAT"),
+  expectedCat = c(NA, "F, M", NA, "mild, severe"),
+  label = c("Age", "Sex", "Sick", "Severity"),
+  parent = c(NA, NA, NA, "sick"),
+  parent_cat = c(NA, NA, NA, "TRUE"),
+  header = NA_character_
+)
+
+descriptives <- function(popdf = cohort, ...) {
+  DescriptivesTable(
+    popdf = copy(popdf),
+    table_metadata = metadata,
+    groupcol = "group",
+    output_format = "processed",
+    calculate_asd = FALSE,
+    keep_varinfo = TRUE,
+    control_types = FALSE,
+    output_asd = FALSE,
+    ...
+  )
+}
+
+test_that("weights of 1 give the unweighted table", {
+  ones <- copy(cohort)[, w := 1]
+  expect_equal(
+    descriptives(ones, use_weights = "w", use_weighted_stats = TRUE),
+    descriptives(ones)
+  )
+})
+
+
+test_that("weighted statistics need a weights column", {
+  expect_error(descriptives(use_weighted_stats = TRUE), "use_weights")
+  expect_error(
+    descriptives(use_weights = "iptw", use_weighted_stats = TRUE),
+    "not found"
+  )
+})

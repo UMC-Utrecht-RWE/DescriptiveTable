@@ -12,6 +12,7 @@
 #' @param missing_flag optional; flag for missing values
 #' @param round_decimals defaults to FALSE; otherwise, an integer specifying rounding
 #' @param use_weights defaults to FALSE; if weighted asd required, supply name of the column in popdf which defines these weights
+#' @param use_weighted_stats defaults to FALSE; if TRUE, counts and descriptive statistics are weighted by the column named in use_weights. Weights are used as supplied
 #' @param output_asd optional; return a list containing a table and an object specifying the ASDs only
 #'
 #' @returns
@@ -34,8 +35,18 @@ DescriptivesTable <- function(
   missing_flag = -99, #
   round_decimals = FALSE,
   use_weights = FALSE,
+  use_weighted_stats = FALSE,
   output_asd = TRUE
 ) {
+  if (isTRUE(use_weighted_stats)) {
+    if (isFALSE(use_weights)) {
+      stop("use_weighted_stats = TRUE requires a weights column, supply it via use_weights")
+    }
+    if (!(use_weights %in% colnames(popdf))) {
+      stop(paste0("weights column '", use_weights, "' not found in popdf"))
+    }
+  }
+
   # detected strange behaviour where compute_asd can sometimes re-write column types
   original_types <- sapply(popdf, class)
 
@@ -77,7 +88,12 @@ DescriptivesTable <- function(
   for (x in group_list) {
     # first obtain total N
     inter_tout <- data.table()
-    popN_group <- popdf[group %in% x, .N]
+    # when weighting, the "size" of a group is the sum of its weights
+    if (isTRUE(use_weighted_stats)) {
+      popN_group <- popdf[group %in% x, sum(get(use_weights), na.rm = TRUE)]
+    } else {
+      popN_group <- popdf[group %in% x, .N]
+    }
     inter_tout <- rbind(inter_tout, list(
       "var" = "Total", "type" = "NUM",
       "parentv" = NA, "parent_catv" = NA,
@@ -121,14 +137,20 @@ DescriptivesTable <- function(
         }
       }
 
-      # grab relevant data from the population-wide data frame
+      # grab relevant data from the population-wide data frame; when weighting,
+      # the weights column travels with the variable of interest
+      varcols <- if (isTRUE(use_weighted_stats)) c(var, use_weights) else var
       if (is.na(parent)) {
-        data <- popdf[group %in% x, ..var]
+        data <- popdf[group %in% x, ..varcols]
       } else {
-        data <- popdf[get(parent) == parent_cat & group %in% x, ..var]
+        data <- popdf[get(parent) == parent_cat & group %in% x, ..varcols]
       }
 
-      res <- get(paste0("count_", type))(data, var, popN, expectedCat)
+      if (isTRUE(use_weighted_stats)) {
+        res <- get(paste0("count_weighted_", type))(data, var, popN, expectedCat, use_weights)
+      } else {
+        res <- get(paste0("count_", type))(data, var, popN, expectedCat)
+      }
       res <- cbind(
         var = rep(var, nrow(res)), type = rep(type, nrow(res)),
         parentv = rep(parent, nrow(res)), parent_catv = rep(parent_cat, nrow(res)),

@@ -17,6 +17,7 @@ DescriptivesTable(
   missing_flag = -99,
   round_decimals = FALSE,
   use_weights = FALSE,
+  use_weighted_stats = FALSE,
   output_asd = TRUE
 )
 }
@@ -44,6 +45,8 @@ DescriptivesTable(
 \item{round_decimals}{defaults to FALSE; otherwise, an integer specifying rounding}
 
 \item{use_weights}{defaults to FALSE; if weighted asd required, supply name of the column in popdf which defines these weights}
+
+\item{use_weighted_stats}{defaults to FALSE; if TRUE, counts and descriptive statistics are weighted by the column named in use_weights. Weights are used as supplied}
 
 \item{output_asd}{optional; return a list containing a table and an object specifying the ASDs only}
 }
