@@ -54,6 +54,14 @@ count_weighted_NUM1 <- function(
   x <- as.numeric(data[[varName]])
   w <- as.numeric(data[[weightName]])
 
+  # If variable is all NA, Hmisc gives an error
+  if (all(is.na(x))) {
+    return(as.data.table(rbind(
+      c("STATS1", NA, NA, NA),
+      c("STATS2", NA, NA, NA)
+    )))
+  }
+
   info_mean <- Hmisc::wtd.mean(x, w, na.rm = TRUE)
   info_sd <- sqrt(Hmisc::wtd.var(x, w, na.rm = TRUE))
   quants <- Hmisc::wtd.quantile(x, w, probs = c(0.5, 0.25, 0.75), na.rm = TRUE)
@@ -88,6 +96,15 @@ count_weighted_NUM2 <- function(
 ) {
   x <- as.numeric(data[[varName]])
   w <- as.numeric(data[[weightName]])
+
+  # If variable is all NA, Hmisc gives an error
+
+  if (all(is.na(x))) {
+    return(as.data.table(rbind(
+      c("STATS1", NA, NA, NA),
+      c("STATS2", NA, NA, NA)
+    )))
+  }
 
   quants <- Hmisc::wtd.quantile(x, w, probs = c(0.5, 0.25, 0.75), na.rm = TRUE)
 

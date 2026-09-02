@@ -50,6 +50,25 @@ test_that("weights of 1 give the unweighted table", {
   )
 })
 
+test_that("min and max are not weighted", {
+  d <- data.table(x = c(1, 2, 3, 100), w = c(0.5, 1, 1, 0.5))
+  res <- count_weighted_NUM2(d, "x", weightName = "w")
+
+  expect_equal(as.numeric(res$V2[2]), 1)
+  expect_equal(as.numeric(res$V3[2]), 100)
+})
+
+test_that("a covariate that is missing does not error", {
+  blank <- copy(cohort)[, age := NA_real_]
+  expect_no_error(descriptives(
+    blank,
+    use_weights = "w",
+    use_weighted_stats = TRUE
+  ))
+  expect_no_error(
+    count_weighted_NUM2(data.table(x = NA_real_, w = 1), "x", weightName = "w")
+  )
+})
 
 test_that("weighted statistics need a weights column", {
   expect_error(descriptives(use_weighted_stats = TRUE), "use_weights")
