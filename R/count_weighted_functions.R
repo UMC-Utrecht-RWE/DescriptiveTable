@@ -75,7 +75,9 @@ count_weighted_NUM1 <- function(
 
 #' Weighted count function for numeric variables which returns median, Q1, Q3 and min, max (type 2)
 #'
-#' Minimum and maximum are returned unweighted.
+#' Minimum and maximum are returned unweighted, as a weighted extreme is not
+#' defined. They are taken directly rather than as the 0 and 1 quantiles of
+#' `wtd.quantile`.
 #'
 #' @param data input data.table containing the variable and the weights column
 #' @param varName name of the variable column in data of interest

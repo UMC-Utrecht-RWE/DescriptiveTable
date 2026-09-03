@@ -17,7 +17,7 @@ DescriptivesTable(
   missing_flag = -99,
   round_decimals = FALSE,
   use_weights = FALSE,
-  use_weighted_stats = FALSE,
+  weighted_stats = FALSE,
   output_asd = TRUE
 )
 }
@@ -46,10 +46,19 @@ DescriptivesTable(
 
 \item{use_weights}{defaults to FALSE; if weighted asd required, supply name of the column in popdf which defines these weights}
 
-\item{use_weighted_stats}{defaults to FALSE; if TRUE, counts and descriptive statistics are weighted by the column named in use_weights. Weights are used as supplied}
+\item{weighted_stats}{defaults to FALSE; if TRUE, counts and descriptive statistics are weighted by the column named in use_weights. Weights are used as supplied}
 
 \item{output_asd}{optional; return a list containing a table and an object specifying the ASDs only}
 }
 \description{
 Title
+}
+\details{
+\code{use_weights} and \code{weighted_stats} can be combined as follows:\tabular{llll}{
+   \code{use_weights} \tab \code{weighted_stats} \tab ASD column \tab counts and statistics \cr
+   \code{FALSE} \tab \code{FALSE} \tab unweighted \tab unweighted \cr
+   \code{"iptw"} \tab \code{FALSE} \tab weighted \tab unweighted \cr
+   \code{"iptw"} \tab \code{TRUE} \tab weighted \tab weighted \cr
+   \code{FALSE} \tab \code{TRUE} \tab error \tab error \cr
+}
 }

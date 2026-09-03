@@ -4,12 +4,12 @@
 \name{DescriptiveTable-package}
 \alias{DescriptiveTable}
 \alias{DescriptiveTable-package}
-\title{DescriptiveTable: What the Package Does (One Line, Title Case)}
+\title{DescriptiveTable: Flexible creation of baseline descriptive tables}
 \description{
-What the package does (one paragraph).
+Package to create baseline descriptives tables ("table 1" in epidemiology circles) and calculate associated statistics such as absolute standardized differences.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Oisin Ryan \email{o.ryan@umcutrecht.nl}
 
 }
 \keyword{internal}

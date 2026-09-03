@@ -12,7 +12,17 @@
 #' @param missing_flag optional; flag for missing values
 #' @param round_decimals defaults to FALSE; otherwise, an integer specifying rounding
 #' @param use_weights defaults to FALSE; if weighted asd required, supply name of the column in popdf which defines these weights
-#' @param use_weighted_stats defaults to FALSE; if TRUE, counts and descriptive statistics are weighted by the column named in use_weights. Weights are used as supplied
+#' @param weighted_stats defaults to FALSE; if TRUE, counts and descriptive statistics are weighted by the column named in use_weights. Weights are used as supplied
+#' @details
+#' `use_weights` and `weighted_stats` can be combined as follows:
+#'
+#' | `use_weights` | `weighted_stats` | ASD column | counts and statistics |
+#' | ------------- | ---------------- | ---------- | --------------------- |
+#' | `FALSE`       | `FALSE`          | unweighted | unweighted            |
+#' | `"iptw"`      | `FALSE`          | weighted   | unweighted            |
+#' | `"iptw"`      | `TRUE`           | weighted   | weighted              |
+#' | `FALSE`       | `TRUE`           | error      | error                 |
+#'
 #' @param output_asd optional; return a list containing a table and an object specifying the ASDs only
 #'
 #' @returns
@@ -35,16 +45,38 @@ DescriptivesTable <- function(
   missing_flag = -99, #
   round_decimals = FALSE,
   use_weights = FALSE,
-  use_weighted_stats = FALSE,
+  weighted_stats = FALSE,
   output_asd = TRUE
 ) {
-  if (isTRUE(use_weighted_stats)) {
+  if (isTRUE(weighted_stats)) {
     if (isFALSE(use_weights)) {
-      stop("use_weighted_stats = TRUE requires a weights column, supply it via use_weights")
+      stop(
+        "weighted_stats = TRUE requires a weights column, supply it via use_weights"
+      )
     }
     if (!(use_weights %in% colnames(popdf))) {
       stop(paste0("weights column '", use_weights, "' not found in popdf"))
     }
+  }
+
+  if (isTRUE(weighted_stats)) {
+    message(
+      "[DescriptiveTable]: counts and statistics weighted by '",
+      use_weights,
+      "'"
+    )
+  } else {
+    message("[DescriptiveTable]: counts and statistics unweighted")
+  }
+  if (isTRUE(calculate_asd)) {
+    message(
+      "[DescriptiveTable]: ASD ",
+      if (isFALSE(use_weights)) {
+        "unweighted"
+      } else {
+        paste0("weighted by '", use_weights, "'")
+      }
+    )
   }
 
   # detected strange behaviour where compute_asd can sometimes re-write column types
@@ -54,7 +86,10 @@ DescriptivesTable <- function(
 
   if (calculate_asd == TRUE) {
     # compute asd using helper function
-    asd_col <- compute_asd(popdf, table_metadata, "1",
+    asd_col <- compute_asd(
+      popdf,
+      table_metadata,
+      "1",
       use_weights = use_weights,
       group_names = group_list
     )
@@ -70,7 +105,9 @@ DescriptivesTable <- function(
   }
 
   if (!(groupcol %in% colnames(popdf))) {
-    stop("No column name in input matching specified groupcol input, check variable names")
+    stop(
+      "No column name in input matching specified groupcol input, check variable names"
+    )
   }
   # extract unique values
   group_list <- unique(popdf[[groupcol]])
@@ -89,17 +126,25 @@ DescriptivesTable <- function(
     # first obtain total N
     inter_tout <- data.table()
     # when weighting, the "size" of a group is the sum of its weights
-    if (isTRUE(use_weighted_stats)) {
+    if (isTRUE(weighted_stats)) {
       popN_group <- popdf[group %in% x, sum(get(use_weights), na.rm = TRUE)]
     } else {
       popN_group <- popdf[group %in% x, .N]
     }
-    inter_tout <- rbind(inter_tout, list(
-      "var" = "Total", "type" = "NUM",
-      "parentv" = NA, "parent_catv" = NA,
-      "cat" = 1, "V1" = popN_group, "V2" = NA, "V3" = NA,
-      "m_id" = NA
-    ))
+    inter_tout <- rbind(
+      inter_tout,
+      list(
+        "var" = "Total",
+        "type" = "NUM",
+        "parentv" = NA,
+        "parent_catv" = NA,
+        "cat" = 1,
+        "V1" = popN_group,
+        "V2" = NA,
+        "V3" = NA,
+        "m_id" = NA
+      )
+    )
 
     # loop through variables in the metadata
     for (i in seq(1, nrow(table_metadata))) {
@@ -118,15 +163,24 @@ DescriptivesTable <- function(
         popN <- popN_group
       } else {
         # take the n count from that variable calculated previously
-        popN <- as.numeric(inter_tout[inter_tout$var == parent & inter_tout$cat == parent_cat, "V1"])
+        popN <- as.numeric(inter_tout[
+          inter_tout$var == parent & inter_tout$cat == parent_cat,
+          "V1"
+        ])
       }
 
       # create target categories for N calculation
       if ("flex" %in% table_metadata[i, expectedCat]) {
         # get unique values in the entire data frame (note, not just that group)
         expectedCat <- sort(unique(popdf[, get(var)]))
-      } else if (!is.na(str_detect(table_metadata[i, expectedCat], "get")) && str_detect(table_metadata[i, expectedCat], "get") == TRUE) {
-        var_categories <- unlist(str_split(table_metadata[i, expectedCat], " "))[2]
+      } else if (
+        !is.na(str_detect(table_metadata[i, expectedCat], "get")) &&
+          str_detect(table_metadata[i, expectedCat], "get") == TRUE
+      ) {
+        var_categories <- unlist(str_split(
+          table_metadata[i, expectedCat],
+          " "
+        ))[2]
         expectedCat <- eval(parse(text = var_categories))
       } else {
         expectedCat <- table_metadata[i, expectedCat]
@@ -139,27 +193,45 @@ DescriptivesTable <- function(
 
       # grab relevant data from the population-wide data frame; when weighting,
       # the weights column travels with the variable of interest
-      varcols <- if (isTRUE(use_weighted_stats)) c(var, use_weights) else var
+      varcols <- if (isTRUE(weighted_stats)) c(var, use_weights) else var
       if (is.na(parent)) {
         data <- popdf[group %in% x, ..varcols]
       } else {
         data <- popdf[get(parent) == parent_cat & group %in% x, ..varcols]
       }
 
-      if (isTRUE(use_weighted_stats)) {
-        res <- get(paste0("count_weighted_", type))(data, var, popN, expectedCat, use_weights)
+      if (isTRUE(weighted_stats)) {
+        res <- get(paste0("count_weighted_", type))(
+          data,
+          var,
+          popN,
+          expectedCat,
+          use_weights
+        )
       } else {
         res <- get(paste0("count_", type))(data, var, popN, expectedCat)
       }
       res <- cbind(
-        var = rep(var, nrow(res)), type = rep(type, nrow(res)),
-        parentv = rep(parent, nrow(res)), parent_catv = rep(parent_cat, nrow(res)),
+        var = rep(var, nrow(res)),
+        type = rep(type, nrow(res)),
+        parentv = rep(parent, nrow(res)),
+        parent_catv = rep(parent_cat, nrow(res)),
         res,
         m_id = rep(m_id, nrow(res))
       )
 
       # colnames(res) <- c('var','type','parentv','parent_catv','cat','m_id','V1','V2','V3')
-      colnames(res) <- c("var", "type", "parentv", "parent_catv", "cat", "V1", "V2", "V3", "m_id")
+      colnames(res) <- c(
+        "var",
+        "type",
+        "parentv",
+        "parent_catv",
+        "cat",
+        "V1",
+        "V2",
+        "V3",
+        "m_id"
+      )
 
       # here; insert otherwise-empty header rows based on label entry + variable type
       # or do this later when "back-translating" useing scores or dictionery
@@ -173,7 +245,11 @@ DescriptivesTable <- function(
   }
 
   # reshape table object from long to wide
-  dcaste_tout_1 <- dcast(table_out, id + var + type + cat + parentv + parent_catv + m_id ~ strata, value.var = c("V1", "V2", "V3"))
+  dcaste_tout_1 <- dcast(
+    table_out,
+    id + var + type + cat + parentv + parent_catv + m_id ~ strata,
+    value.var = c("V1", "V2", "V3")
+  )
 
   # --------------  add ASD column -----------
   # add top row of the asd column
@@ -183,14 +259,18 @@ DescriptivesTable <- function(
     asd_col <- rbind(asd_toprow, asd_col)
 
     # merge group descriptives table with asd informaiton
-    dcaste_tout_1 <- merge(dcaste_tout_1, asd_col, by = c("var", "type"), all.x = TRUE)
+    dcaste_tout_1 <- merge(
+      dcaste_tout_1,
+      asd_col,
+      by = c("var", "type"),
+      all.x = TRUE
+    )
   }
   # re-order rows to desired order specified by id column
   setorderv(dcaste_tout_1, cols = "id")
 
   # create copy of the output table
   output_df <- dcaste_tout_1
-
 
   # -----------------------------------------------------------------
   # - Tidy Appearance of the Table: Adding headers, creating labels -
@@ -248,7 +328,11 @@ DescriptivesTable <- function(
         newrow <- matrix(NA, 1, ncol = ncol(output_df))
         colnames(newrow) <- colnames(output_df)
         newrow[, "label"] <- as.character(empty_header)
-        output_df <- rbind(output_df[1:(start - 1), ], newrow, output_df[start:nrow(output_df), ])
+        output_df <- rbind(
+          output_df[1:(start - 1), ],
+          newrow,
+          output_df[start:nrow(output_df), ]
+        )
 
         # overwrite start and end points
         start <- start + 1
@@ -274,46 +358,64 @@ DescriptivesTable <- function(
         # re-write ASD column to the header row, NA otherwise
         if (isTRUE(calculate_asd)) {
           if (length(unique(output_df[start:end, "asd_1"])) != 1) {
-            stop(paste0("error in writing ASD values to labels, check categorical setting variable ", var))
+            stop(paste0(
+              "error in writing ASD values to labels, check categorical setting variable ",
+              var
+            ))
           }
           newrow[, "asd_1"] <- unique(output_df[start:end, "asd_1"])
           output_df[start:end, "asd_1"] <- NA
         }
         # insert header row into the table
-        output_df <- rbind(output_df[1:(start - 1), ], newrow, output_df[start:nrow(output_df), ])
-
+        output_df <- rbind(
+          output_df[1:(start - 1), ],
+          newrow,
+          output_df[start:nrow(output_df), ]
+        )
 
         # for categorical variables, write category labels for the rest of the rows
         if (type == "CAT") {
           # re-write category label strings if available in dictionary or scores files
           if (var %in% label_lookup$VarName) {
             rtab <- label_lookup[label_lookup$VarName %in% var, ]
-            output_df[(start + 1):(end + 1), "label"] <- levels(factor(output_df[(start + 1):(end + 1), "cat"],
+            output_df[(start + 1):(end + 1), "label"] <- levels(factor(
+              output_df[(start + 1):(end + 1), "cat"],
               levels = rtab$integerVal,
               labels = rtab$category
             ))
           } else {
             # write category labels into the label column
-            output_df[(start + 1):(end + 1), "label"] <- output_df[(start + 1):(end + 1), "cat"]
+            output_df[(start + 1):(end + 1), "label"] <- output_df[
+              (start + 1):(end + 1),
+              "cat"
+            ]
           }
         } # end type==CAT if
 
         # for numeric variables, re-write row labels with standard format
         if (type == "NUM1") {
-          output_df[(start + 1):(end + 1), "label"] <- c("Mean (SD)", "Median (Q1, Q3)")
+          output_df[(start + 1):(end + 1), "label"] <- c(
+            "Mean (SD)",
+            "Median (Q1, Q3)"
+          )
         }
         if (type == "NUM2") {
-          output_df[(start + 1):(end + 1), "label"] <- c("Median (Q1, Q3)", "Min, Max")
+          output_df[(start + 1):(end + 1), "label"] <- c(
+            "Median (Q1, Q3)",
+            "Min, Max"
+          )
         }
       } # end if CAT,NUM1,NUM2
       # if variable type is TF, no extra header column needed
       if (type == "TF") {
         output_df[start, "label"] <- label
         # write category labels into the label column
-        output_df[(start + 1):(end + 1), "label"] <- output_df[(start + 1):(end + 1), "cat"]
+        output_df[(start + 1):(end + 1), "label"] <- output_df[
+          (start + 1):(end + 1),
+          "cat"
+        ]
       }
     } # end for loop through table
-
 
     # ------ Additional appearance processing ------
 
@@ -323,13 +425,16 @@ DescriptivesTable <- function(
     # vector with names of numeric output columns
     numinfo <- names(output_df)[!names(output_df) %in% c("label", varinfo)]
     # ensure numinfo columns are numeric type
-    output_df[, (numinfo) := lapply(.SD, function(col) {
-      if (is.logical(col)) {
-        as.numeric(col)
-      } else {
-        col
-      }
-    }), .SDcols = numinfo]
+    output_df[,
+      (numinfo) := lapply(.SD, function(col) {
+        if (is.logical(col)) {
+          as.numeric(col)
+        } else {
+          col
+        }
+      }),
+      .SDcols = numinfo
+    ]
 
     # move "raw" information to end of table
     column_order <- c(
@@ -339,7 +444,6 @@ DescriptivesTable <- function(
     )
     setcolorder(output_df, column_order)
 
-
     # drop "raw" variable information
     if (keep_varinfo == FALSE) {
       output_df[, (varinfo) := NULL]
@@ -348,7 +452,10 @@ DescriptivesTable <- function(
     # apply rounding
     output_df[, (numinfo) := lapply(.SD, as.numeric), .SDcols = numinfo]
     if (!isFALSE(round_decimals)) {
-      output_df[, (numinfo) := lapply(.SD, function(x) round(x, round_decimals)), .SDcols = numinfo]
+      output_df[,
+        (numinfo) := lapply(.SD, function(x) round(x, round_decimals)),
+        .SDcols = numinfo
+      ]
     }
   } # end if statement for processed output
   if (isFALSE(output_asd)) {
