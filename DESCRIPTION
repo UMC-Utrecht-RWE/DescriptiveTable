@@ -1,6 +1,6 @@
 Package: DescriptiveTable
 Title: Flexible creation of baseline descriptive tables
-Version: 0.2.1
+Version: 0.3.0
 Authors@R: 
     person("Oisin", "Ryan", , "o.ryan@umcutrecht.nl", role = c("aut", "cre"))
 Description: Package to create baseline descriptives tables ("table 1" in epidemiology circles) and calculate associated statistics such as absolute standardized differences.
