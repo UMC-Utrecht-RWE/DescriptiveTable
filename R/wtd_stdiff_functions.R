@@ -150,7 +150,7 @@ wtd.stddiff.binary <- function(data, gcol, vcol, var,
     temp[, 2] <- as.numeric(temp[, 2])
     temp[, var] <- temp[, var] - 1
     # use weighted mean
-    p <- sapply(c("CONTROL", "EXPOSED"), function(s) {
+    p <- sapply(group_names, function(s) {
       Hmisc::wtd.mean(temp[temp$group == s, var],
         weights = temp[temp$group == s, use_weights]
       )
