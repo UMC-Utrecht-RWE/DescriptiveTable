@@ -9,7 +9,8 @@ compute_asd(
   metadata,
   referenceExtension = "",
   use_weights = FALSE,
-  group_names = c("CONTROL", "EXPOSED")
+  group_names = c("CONTROL", "EXPOSED"),
+  asd_per_level = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ compute_asd(
 \item{use_weights}{if FALSE, computes unweighted ASDs; to compute weighted ASDs, supply column name for weights in CovariatesInformation}
 
 \item{group_names}{levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED}
+
+\item{asd_per_level}{if TRUE, categorical variables additionally get a per-category ASD below their overall ASD; comparing the proportion in that category between the two groups}
 }
 \description{
 Wrapper function to compute all ASDs for a set of variables
