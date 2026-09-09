@@ -2,15 +2,13 @@
 % Please edit documentation in R/wtd_stdiff_functions.R
 \name{wtd.stddiff.numeric}
 \alias{wtd.stddiff.numeric}
-\title{Weighted ASD for numeric type variables}
+\title{Weighted/unweighted ASD for numeric type variables}
 \usage{
 wtd.stddiff.numeric(
   data,
   gcol,
   vcol,
-  var,
-  group = "group",
-  use_weights,
+  use_weights = FALSE,
   group_names = c("CONTROL", "EXPOSED")
 )
 }
@@ -21,16 +19,12 @@ wtd.stddiff.numeric(
 
 \item{vcol}{index of the variable column for which the ASD is to be computed}
 
-\item{var}{name of the variable. Note: should be replaced by vcol internally to remove redundancy}
-
-\item{group}{levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED}
-
-\item{use_weights}{name of the column in data containing the weights}
+\item{use_weights}{FALSE for unweighted ASD, otherwise name of the column in data containing the weights}
 
 \item{group_names}{levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED}
 }
 \description{
-Weighted ASD for numeric type variables
+Weighted/unweighted ASD for numeric type variables
 }
 \details{
 This function is based on the unstandardized differences in the \code{stddiff} package, but uses the weighted variance from \verb{Hmisc::}

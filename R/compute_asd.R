@@ -31,14 +31,14 @@ compute_asd <- function(CovariatesInformation, # file of type M_StudyCohort_Cova
           if(dim_tabvals > 2){ # check if categorical/continuous variable has more than binary levels
             if (metadata$type[i] == "NUM1" | metadata$type[i] == "NUM2"){
               smd <- rbind(smd,  c(var,metadata$type[i], asd_helper(CovariatesInformation,indexGroup,indexCol,met = metadata$type[i],
-                                                                    use_weights = use_weights, var = var,group_names)[1,7]))
+                                                                    use_weights = use_weights, group_names)[1,7]))
             }else{
               smd <- rbind(smd, c(var,metadata$type[i],asd_helper(CovariatesInformation,indexGroup,indexCol,met = metadata$type[i],
-                                                                  use_weights = use_weights, var = var,group_names)[1,5]))
+                                                                  use_weights = use_weights, group_names)[1,5]))
             }
           }else{ # if only two levels, then calculate as binary
             smd <- rbind(smd, c(var,metadata$type[i],asd_helper(CovariatesInformation,indexGroup,indexCol,met = "TF",
-                                                                use_weights = use_weights, var = var,group_names)[1,5]))
+                                                                use_weights = use_weights, group_names)[1,5]))
           }
           
         }else{# if no differing levels calculate as 0
