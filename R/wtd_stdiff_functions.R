@@ -1,12 +1,10 @@
-# file containing weighted standardized difference functions
-#' Weighted ASD for categorical variables
+# file containing weighted/unweighted standardized difference functions
+#' Weighted/unweighted ASD for categorical variables
 #'
 #' @param data input data frame, containing a group column (gcol),variable column (vcol) and weights column (use_weights)
 #' @param gcol index of the group column
 #' @param vcol  index of the variable column for which the ASD is to be computed
-#' @param var name of the variable. Note: should be replaced by vcol internally to remove redundancy
-#' @param group levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED
-#' @param use_weights name of the column in data containing the weights
+#' @param use_weights FALSE for unweighted ASD, otherwise name of the column in data containing the weights
 #' @param group_names levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED
 #'
 #' @details
@@ -17,8 +15,7 @@
 #' @export
 #'
 #' @examples
-wtd.stddiff.category <- function(data, gcol, vcol, var,
-                                 group = "group", use_weights,
+wtd.stddiff.category <- function(data, gcol, vcol, use_weights = FALSE,
                                  group_names = c("CONTROL", "EXPOSED")) {
   for (i in 1:length(c(gcol, vcol))) {
     data[, c(gcol, vcol)[i]] <- as.factor(data[, c(gcol, vcol)[i]])
@@ -40,23 +37,27 @@ wtd.stddiff.category <- function(data, gcol, vcol, var,
   for (i in 1:length(vcol)) {
     na.c <- length(which(is.na(data[, vcol[i]][which(data[, gcol] == levels(data[, gcol])[1])])))
     na.t <- length(which(is.na(data[, vcol[i]][which(data[, gcol] == levels(data[, gcol])[2])])))
-    wcol <- which(colnames(data) == use_weights)[1]
-    temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
+    if (use_weights == FALSE) {
+      temp <- na.omit(data[, c(gcol, vcol[i])])
+      tbl <- table(temp[, 2], temp[, 1])
+    } else {
+      wcol <- which(colnames(data) == use_weights)[1]
+      temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
 
-    temp_exp <- temp[temp[, group] == group_names[2], ]
-    temp_con <- temp[temp[, group] == group_names[1], ]
+      temp_exp <- temp[temp[, 1] == group_names[2], ]
+      temp_con <- temp[temp[, 1] == group_names[1], ]
 
-    tbl_exp <- as.data.frame(Hmisc::wtd.table(temp_exp[, var], w = temp_exp[, use_weights]))
-    tbl_con <- as.data.frame(Hmisc::wtd.table(temp_con[, var], w = temp_con[, use_weights]))
-    colnames(tbl_exp)[2] <- group_names[2]
-    colnames(tbl_con)[2] <- group_names[1]
+      tbl_exp <- as.data.frame(Hmisc::wtd.table(temp_exp[, 2], w = temp_exp[, use_weights]))
+      tbl_con <- as.data.frame(Hmisc::wtd.table(temp_con[, 2], w = temp_con[, use_weights]))
+      colnames(tbl_exp)[2] <- group_names[2]
+      colnames(tbl_con)[2] <- group_names[1]
 
-    tbl <- merge(tbl_exp, by.x = "x", tbl_con, all.x = TRUE, all.y = TRUE, sort = TRUE)
-    tbl[is.na(tbl)] <- 0
-    rownames(tbl) <- tbl[, 1]
-    tbl[, 1] <- NULL
+      tbl <- merge(tbl_exp, by.x = "x", tbl_con, all.x = TRUE, all.y = TRUE, sort = TRUE)
+      tbl[is.na(tbl)] <- 0
+      rownames(tbl) <- tbl[, 1]
+      tbl[, 1] <- NULL
+    }
 
-    # table(temp[, 2], temp[, 1])
     prop <- prop.table(data.matrix(tbl), 2)
     t <- prop[-1, 2]
     c <- prop[-1, 1]
@@ -113,14 +114,12 @@ wtd.stddiff.category <- function(data, gcol, vcol, var,
   return(rst)
 }
 
-#' Weighted ASD for binary variables
+#' Weighted/unweighted ASD for binary variables
 #'
 #' @param data input data frame, containing a group column (gcol),variable column (vcol) and weights column (use_weights)
 #' @param gcol index of the group column
 #' @param vcol  index of the variable column for which the ASD is to be computed
-#' @param var name of the variable. Note: should be replaced by vcol internally to remove redundancy
-#' @param group levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED
-#' @param use_weights name of the column in data containing the weights
+#' @param use_weights FALSE for unweighted ASD, otherwise name of the column in data containing the weights
 #' @param group_names levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED
 #'
 #' @details
@@ -130,8 +129,7 @@ wtd.stddiff.category <- function(data, gcol, vcol, var,
 #' @export
 #'
 #' @examples
-wtd.stddiff.binary <- function(data, gcol, vcol, var,
-                               group = "group", use_weights,
+wtd.stddiff.binary <- function(data, gcol, vcol, use_weights = FALSE,
                                group_names = c("CONTROL", "EXPOSED")) {
   for (i in 1:length(c(gcol, vcol))) {
     data[, c(gcol, vcol)[i]] <- as.factor(data[, c(gcol, vcol)[i]])
@@ -145,16 +143,23 @@ wtd.stddiff.binary <- function(data, gcol, vcol, var,
     na.c <- length(which(is.na(data[, vcol[i]][which(data[, gcol] == levels(data[, gcol])[1])])))
     na.t <- length(which(is.na(data[, vcol[i]][which(data[, gcol] == levels(data[, gcol])[2])])))
 
-    wcol <- which(colnames(data) == use_weights)[1]
-    temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
-    temp[, 2] <- as.numeric(temp[, 2])
-    temp[, var] <- temp[, var] - 1
-    # use weighted mean
-    p <- sapply(c("CONTROL", "EXPOSED"), function(s) {
-      Hmisc::wtd.mean(temp[temp$group == s, var],
-        weights = temp[temp$group == s, use_weights]
-      )
-    })
+    if (use_weights == FALSE) {
+      temp <- na.omit(data[, c(gcol, vcol[i])])
+      temp[, 2] <- as.numeric(temp[, 2]) - 1
+      p <- sapply(group_names, function(s) {
+        mean(temp[temp[, 1] == s, 2])
+      })
+    } else {
+      wcol <- which(colnames(data) == use_weights)[1]
+      temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
+      temp[, 2] <- as.numeric(temp[, 2]) - 1
+      # use weighted mean
+      p <- sapply(c("CONTROL", "EXPOSED"), function(s) {
+        Hmisc::wtd.mean(temp[temp[, 1] == s, 2],
+          weights = temp[temp[, 1] == s, use_weights]
+        )
+      })
+    }
 
     stddiff <- base::abs(p[2] - p[1]) / sqrt((p[2] * (1 - p[2]) + p[1] * (1 - p[1])) / 2)
     n <- table(temp[, 1])
@@ -168,14 +173,12 @@ wtd.stddiff.binary <- function(data, gcol, vcol, var,
   return(rst)
 }
 
-#' Weighted ASD for numeric type variables
+#' Weighted/unweighted ASD for numeric type variables
 #'
 #' @param data input data frame, containing a group column (gcol),variable column (vcol) and weights column (use_weights)
 #' @param gcol index of the group column
 #' @param vcol  index of the variable column for which the ASD is to be computed
-#' @param var name of the variable. Note: should be replaced by vcol internally to remove redundancy
-#' @param group levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED
-#' @param use_weights name of the column in data containing the weights
+#' @param use_weights FALSE for unweighted ASD, otherwise name of the column in data containing the weights
 #' @param group_names levels of the group variable of interest for output display. Defaults to CONTROL and EXPOSED
 #'
 #' @details
@@ -185,8 +188,7 @@ wtd.stddiff.binary <- function(data, gcol, vcol, var,
 #' @export
 #'
 #' @examples
-wtd.stddiff.numeric <- function(data, gcol, vcol, var,
-                                group = "group", use_weights,
+wtd.stddiff.numeric <- function(data, gcol, vcol, use_weights = FALSE,
                                 group_names = c("CONTROL", "EXPOSED")) {
   data[, gcol] <- as.factor(data[, gcol])
   rst <- matrix(rep(0, 9 * length(vcol)), ncol = 9)
@@ -205,32 +207,44 @@ wtd.stddiff.numeric <- function(data, gcol, vcol, var,
       ,
       gcol
     ] == levels(data[, gcol])[2])])))
-    wcol <- which(colnames(data) == use_weights)[1]
+    if (use_weights == FALSE) {
+      # omit missing values if relevant
+      temp <- na.omit(data[, c(gcol, vcol[i])])
 
-    # omit missing values if relevant
-    temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
-
-    # use weighted mean and weighted sd
-    m <- sapply(group_names, function(s) {
-      Hmisc::wtd.mean(temp[temp$group == s, var],
-        weights = temp[temp$group == s, use_weights]
-      )
-    })
-    s <- suppressWarnings(sapply(group_names, function(s) {
-      sqrt(Hmisc::wtd.var(temp[temp$group == s, var],
-        weights = temp[temp$group == s, use_weights]
-      ))
-    }))
-    # edge case can occur where weighted sd is negative
-    # if this happens, try an alternative weighting method
-    if (any(is.nan(s))) {
-      log_print(paste0("For variable ", var, " negative weighted variance, switching method to ML"))
-      s <- sapply(group_names, function(s) {
-        sqrt(Hmisc::wtd.var(temp[temp$group == s, var],
-          weights = temp[temp$group == s, use_weights],
-          method = "ML"
-        ))
+      m <- sapply(group_names, function(s) {
+        mean(temp[temp[, 1] == s, 2])
       })
+      s <- sapply(group_names, function(s) {
+        sd(temp[temp[, 1] == s, 2])
+      })
+    } else {
+      wcol <- which(colnames(data) == use_weights)[1]
+
+      # omit missing values if relevant
+      temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
+
+      # use weighted mean and weighted sd
+      m <- sapply(group_names, function(s) {
+        Hmisc::wtd.mean(temp[temp[, 1] == s, 2],
+          weights = temp[temp[, 1] == s, use_weights]
+        )
+      })
+      s <- suppressWarnings(sapply(group_names, function(s) {
+        sqrt(Hmisc::wtd.var(temp[temp[, 1] == s, 2],
+          weights = temp[temp[, 1] == s, use_weights]
+        ))
+      }))
+      # edge case can occur where weighted sd is negative
+      # if this happens, try an alternative weighting method
+      if (any(is.nan(s))) {
+        log_print(paste0("For variable ", names(data)[vcol[i]], " negative weighted variance, switching method to ML"))
+        s <- sapply(group_names, function(s) {
+          sqrt(Hmisc::wtd.var(temp[temp[, 1] == s, 2],
+            weights = temp[temp[, 1] == s, use_weights],
+            method = "ML"
+          ))
+        })
+      }
     }
 
     stddiff <- base::abs(m[2] - m[1]) / sqrt((s[2]^2 + s[1]^2) / 2)
