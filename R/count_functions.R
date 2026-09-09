@@ -35,7 +35,7 @@ count_NUM1 <- function(data, varName, popN = NA ,expectedCat = NA){
   info <- summary(data[[1]])
 
   info_mean = info[[4]]
-  info_sd = sd(data[[1]])
+  info_sd = sd(data[[1]], na.rm = TRUE)
   info_median = info[[3]]
   info_q1 = info[[2]]
   info_q3 = info[[5]]
