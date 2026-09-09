@@ -38,11 +38,11 @@ wtd.stddiff.category <- function(data, gcol, vcol, use_weights = FALSE,
     na.c <- length(which(is.na(data[, vcol[i]][which(data[, gcol] == levels(data[, gcol])[1])])))
     na.t <- length(which(is.na(data[, vcol[i]][which(data[, gcol] == levels(data[, gcol])[2])])))
     if (use_weights == FALSE) {
-      temp <- na.omit(data[, c(gcol, vcol[i])])
+      temp <- stats::na.omit(data[, c(gcol, vcol[i])])
       tbl <- table(temp[, 2], temp[, 1])
     } else {
       wcol <- which(colnames(data) == use_weights)[1]
-      temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
+      temp <- stats::na.omit(data[, c(gcol, vcol[i], wcol)])
 
       temp_exp <- temp[temp[, 1] == group_names[2], ]
       temp_con <- temp[temp[, 1] == group_names[1], ]
@@ -144,14 +144,14 @@ wtd.stddiff.binary <- function(data, gcol, vcol, use_weights = FALSE,
     na.t <- length(which(is.na(data[, vcol[i]][which(data[, gcol] == levels(data[, gcol])[2])])))
 
     if (use_weights == FALSE) {
-      temp <- na.omit(data[, c(gcol, vcol[i])])
+      temp <- stats::na.omit(data[, c(gcol, vcol[i])])
       temp[, 2] <- as.numeric(temp[, 2]) - 1
       p <- sapply(group_names, function(s) {
         mean(temp[temp[, 1] == s, 2])
       })
     } else {
       wcol <- which(colnames(data) == use_weights)[1]
-      temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
+      temp <- stats::na.omit(data[, c(gcol, vcol[i], wcol)])
       temp[, 2] <- as.numeric(temp[, 2]) - 1
       # use weighted mean
       p <- sapply(c("CONTROL", "EXPOSED"), function(s) {
@@ -209,19 +209,19 @@ wtd.stddiff.numeric <- function(data, gcol, vcol, use_weights = FALSE,
     ] == levels(data[, gcol])[2])])))
     if (use_weights == FALSE) {
       # omit missing values if relevant
-      temp <- na.omit(data[, c(gcol, vcol[i])])
+      temp <- stats::na.omit(data[, c(gcol, vcol[i])])
 
       m <- sapply(group_names, function(s) {
         mean(temp[temp[, 1] == s, 2])
       })
       s <- sapply(group_names, function(s) {
-        sd(temp[temp[, 1] == s, 2])
+        stats::sd(temp[temp[, 1] == s, 2])
       })
     } else {
       wcol <- which(colnames(data) == use_weights)[1]
 
       # omit missing values if relevant
-      temp <- na.omit(data[, c(gcol, vcol[i], wcol)])
+      temp <- stats::na.omit(data[, c(gcol, vcol[i], wcol)])
 
       # use weighted mean and weighted sd
       m <- sapply(group_names, function(s) {
@@ -237,7 +237,7 @@ wtd.stddiff.numeric <- function(data, gcol, vcol, use_weights = FALSE,
       # edge case can occur where weighted sd is negative
       # if this happens, try an alternative weighting method
       if (any(is.nan(s))) {
-        log_print(paste0("For variable ", names(data)[vcol[i]], " negative weighted variance, switching method to ML"))
+        logger::log_warn(paste0("For variable ", names(data)[vcol[i]], " negative weighted variance, switching method to ML"))
         s <- sapply(group_names, function(s) {
           sqrt(Hmisc::wtd.var(temp[temp[, 1] == s, 2],
             weights = temp[temp[, 1] == s, use_weights],
