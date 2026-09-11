@@ -406,8 +406,16 @@ DescriptivesTable <- function(
             varname <- table_metadata[i, var]
             level_asd <- asd_col[!is.na(cat) & var == varname]
             cats <- unlist(output_df[(start + 1):(end + 1), "cat"])
+            matched <- match(cats, level_asd$cat)
+            if (anyNA(matched)) {
+              stop(paste0(
+                "error in writing per-category ASD values, no match found for ",
+                "category/categories of variable ",
+                varname
+              ))
+            }
             output_df[(start + 1):(end + 1), "asd_1"] <- level_asd$asd_1[
-              match(cats, level_asd$cat)
+              matched
             ]
           }
         } # end type==CAT if
