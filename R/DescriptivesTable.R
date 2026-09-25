@@ -280,7 +280,20 @@ DescriptivesTable <- function(
 
   # create copy of the output table
   output_df <- dcaste_tout_1
-
+  
+  # Write per-category ASDs into raw output rows
+  if (
+    output_format == "raw" &&
+    isTRUE(calculate_asd) &&
+    isTRUE(asd_per_level)
+  ) {
+    level_asd <- asd_col[!is.na(cat)]
+    output_df[
+      level_asd,
+      on = .(var, type, cat),
+      asd_1 := i.asd_1
+    ]
+  }
   # -----------------------------------------------------------------
   # - Tidy Appearance of the Table: Adding headers, creating labels -
   # -----------------------------------------------------------------

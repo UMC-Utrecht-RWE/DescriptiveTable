@@ -118,3 +118,9 @@ test_that("without asd_per_level the category rows carry no ASD", {
   expect_equal(tab[label == "Region", asd_1], as.numeric(overall[1, asd_1]))
   expect_true(all(is.na(tab[var == "region", asd_1])))
 })
+
+test_that("output_format = 'raw' returns the per-category ASD in the $asd table", {
+  tab <- descriptives(output_format = "raw", asd_per_level = TRUE)
+
+  expect_equal(as.numeric(tab[var == "region", asd_1]), as.numeric(per_level[!is.na(cat), asd_1]))
+})
