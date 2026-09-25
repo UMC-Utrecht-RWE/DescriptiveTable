@@ -18,7 +18,8 @@ baseline_descriptives <- DescriptiveTable::DescriptivesTable(
   asd_per_level = asd_per_level) 
 baseline_descriptives
 
-## the result table asd_1 is only the overall asd, not the per level asd. The per level asd is in the $asd table of the result.
+## results before the fix --
+## the result table asd_1 returns only the overall asd, not the per level asd. The per level asd is in the $asd table of the result.
 # > baseline_descriptives
 # $table
 #                       var   type    id    cat parentv parent_catv  m_id       V1_CONTROL       V1_EXPOSED        V2_CONTROL        V2_EXPOSED V3_CONTROL V3_EXPOSED                asd_1
@@ -73,3 +74,10 @@ baseline_descriptives
 #                       var   type    cat                asd_1
 #                    <char> <char> <char>               <char>
 # >
+
+
+# ## after the fix, error with `output_format = 'processed'
+# [DescriptiveTable]: counts and statistics weighted by 'stabilized_trunc_iptw'
+# [DescriptiveTable]: ASD weighted by 'stabilized_trunc_iptw'
+# Error in `DescriptiveTable::DescriptivesTable()`:
+# ! error in writing per-category ASD values, no match found for category/categories of variable SV_ASM_PREVIOUS

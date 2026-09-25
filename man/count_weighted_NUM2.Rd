@@ -23,6 +23,5 @@ two rows containing; i) weighted median, Q1, Q3, ii) min, max
 \description{
 Minimum and maximum are returned unweighted, as a weighted extreme is not
 defined. They are taken directly rather than as the 0 and 1 quantiles of
-\code{wtd.quantile}, which only coincide with the observed extremes when the
-weights are integers.
+\code{wtd.quantile}.
 }
