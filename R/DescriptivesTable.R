@@ -61,6 +61,10 @@ DescriptivesTable <- function(
     }
   }
 
+  if (isTRUE(asd_per_level) && isFALSE(calculate_asd)) {
+    stop("asd_per_level = TRUE requires calculate_asd = TRUE")
+  }
+
   if (isTRUE(weighted_stats)) {
     message(
       "[DescriptiveTable]: counts and statistics weighted by '",
@@ -280,6 +284,17 @@ DescriptivesTable <- function(
 
   # create copy of the output table
   output_df <- dcaste_tout_1
+
+  # raw output has no header rows, so the category rows take the per-category
+  # ASD directly; the processed path writes them further below
+  if (
+    output_format == "raw" &&
+      isTRUE(calculate_asd) &&
+      isTRUE(asd_per_level)
+  ) {
+    level_asd <- asd_col[!is.na(cat)]
+    output_df[level_asd, on = .(var, type, cat), asd_1 := i.asd_1]
+  }
 
   # -----------------------------------------------------------------
   # - Tidy Appearance of the Table: Adding headers, creating labels -

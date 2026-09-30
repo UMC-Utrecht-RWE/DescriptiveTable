@@ -119,6 +119,13 @@ test_that("without asd_per_level the category rows carry no ASD", {
   expect_true(all(is.na(tab[var == "region", asd_1])))
 })
 
+test_that("asd_per_level without calculate_asd is an error", {
+  expect_error(
+    descriptives(asd_per_level = TRUE, calculate_asd = FALSE),
+    "requires calculate_asd"
+  )
+})
+
 test_that("output_format = 'raw' returns the per-category ASD", {
   tab <- descriptives(output_format = "raw", asd_per_level = TRUE)
 
