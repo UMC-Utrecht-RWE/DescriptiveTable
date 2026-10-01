@@ -18,6 +18,8 @@ mask_vector(
 
 \item{threshold}{Integer. Threshold below which values need to be masked. Determined externally.}
 
+\item{rounding_digits}{Integer. Number of digits to round percentages to.}
+
 \item{output_warnings}{Logical. Should warning be issued displaying which value combinations are not possible, if any?}
 
 \item{percentage}{Logical. Should output be raw numbers or corresponding percentages?}

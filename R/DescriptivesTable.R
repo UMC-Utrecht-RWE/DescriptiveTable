@@ -24,6 +24,7 @@
 #' | `FALSE`       | `TRUE`           | error      | error                 |
 #'
 #' @param output_asd optional; return a list containing a table and an object specifying the ASDs only
+#' @param asd_per_level defaults to FALSE; if TRUE, categorical variables get a per-category ASD on each of their category rows, in addition to the overall ASD on the header row
 #'
 #' @returns
 #' @import data.table
@@ -46,7 +47,8 @@ DescriptivesTable <- function(
   round_decimals = FALSE,
   use_weights = FALSE,
   weighted_stats = FALSE,
-  output_asd = TRUE
+  output_asd = TRUE,
+  asd_per_level = FALSE
 ) {
   if (isTRUE(weighted_stats)) {
     if (isFALSE(use_weights)) {
@@ -57,6 +59,10 @@ DescriptivesTable <- function(
     if (!(use_weights %in% colnames(popdf))) {
       stop(paste0("weights column '", use_weights, "' not found in popdf"))
     }
+  }
+
+  if (isTRUE(asd_per_level) && isFALSE(calculate_asd)) {
+    stop("asd_per_level = TRUE requires calculate_asd = TRUE")
   }
 
   if (isTRUE(weighted_stats)) {
@@ -91,7 +97,8 @@ DescriptivesTable <- function(
       table_metadata,
       "1",
       use_weights = use_weights,
-      group_names = group_list
+      group_names = group_list,
+      asd_per_level = asd_per_level
     )
     # remove duplicates (can occur when variable appears in table metadata >1)
     asd_col <- asd_col[!duplicated(asd_col), ]
@@ -254,14 +261,20 @@ DescriptivesTable <- function(
   # --------------  add ASD column -----------
   # add top row of the asd column
   if (isTRUE(calculate_asd)) {
-    asd_toprow <- list("var" = "Total", "type" = "NUM", "asd_1" = "")
+    asd_toprow <- list(
+      "var" = "Total",
+      "type" = "NUM",
+      "cat" = NA,
+      "asd_1" = ""
+    )
     names(asd_toprow) <- colnames(asd_col)
     asd_col <- rbind(asd_toprow, asd_col)
 
-    # merge group descriptives table with asd informaiton
+    # merge group descriptives table with asd informaiton; only the one row per
+    # variable, any per-category rows are written to the table further below
     dcaste_tout_1 <- merge(
       dcaste_tout_1,
-      asd_col,
+      asd_col[is.na(cat), !"cat"],
       by = c("var", "type"),
       all.x = TRUE
     )
@@ -271,6 +284,17 @@ DescriptivesTable <- function(
 
   # create copy of the output table
   output_df <- dcaste_tout_1
+
+  # raw output has no header rows, so the category rows take the per-category
+  # ASD directly; the processed path writes them further below
+  if (
+    output_format == "raw" &&
+      isTRUE(calculate_asd) &&
+      isTRUE(asd_per_level)
+  ) {
+    level_asd <- asd_col[!is.na(cat)]
+    output_df[level_asd, on = .(var, type, cat), asd_1 := i.asd_1]
+  }
 
   # -----------------------------------------------------------------
   # - Tidy Appearance of the Table: Adding headers, creating labels -
@@ -388,6 +412,25 @@ DescriptivesTable <- function(
             output_df[(start + 1):(end + 1), "label"] <- output_df[
               (start + 1):(end + 1),
               "cat"
+            ]
+          }
+
+          # the header row above keeps the overall ASD; give each category row
+          # its own per-category value
+          if (isTRUE(asd_per_level) && isTRUE(calculate_asd)) {
+            varname <- table_metadata[i, var]
+            level_asd <- asd_col[!is.na(cat) & var == varname]
+            cats <- unlist(output_df[(start + 1):(end + 1), "cat"])
+            matched <- match(cats, level_asd$cat)
+            if (anyNA(matched)) {
+              stop(paste0(
+                "error in writing per-category ASD values, no match found for ",
+                "category/categories of variable ",
+                varname
+              ))
+            }
+            output_df[(start + 1):(end + 1), "asd_1"] <- level_asd$asd_1[
+              matched
             ]
           }
         } # end type==CAT if

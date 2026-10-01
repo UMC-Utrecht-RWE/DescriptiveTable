@@ -18,7 +18,8 @@ DescriptivesTable(
   round_decimals = FALSE,
   use_weights = FALSE,
   weighted_stats = FALSE,
-  output_asd = TRUE
+  output_asd = TRUE,
+  asd_per_level = FALSE
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ DescriptivesTable(
 \item{weighted_stats}{defaults to FALSE; if TRUE, counts and descriptive statistics are weighted by the column named in use_weights. Weights are used as supplied}
 
 \item{output_asd}{optional; return a list containing a table and an object specifying the ASDs only}
+
+\item{asd_per_level}{defaults to FALSE; if TRUE, categorical variables get a per-category ASD on each of their category rows, in addition to the overall ASD on the header row}
 }
 \description{
 Title

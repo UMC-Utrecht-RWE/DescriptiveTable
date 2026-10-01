@@ -25,6 +25,7 @@ is_exception <- function(value) {
 #'
 #' @param input_vector Numeric or character vector of counts. Possibly including special values such as NA, NE, etc. Non-special values should be positive integer counts.
 #' @param threshold Integer. Threshold below which values need to be masked. Determined externally.
+#' @param rounding_digits Integer. Number of digits to round percentages to.
 #' @param output_warnings Logical. Should warning be issued displaying which value combinations are not possible, if any?
 #' @param percentage Logical. Should output be raw numbers or corresponding percentages?
 #' @param total Integer. Defaults is NULL. If NULL, total will be computed each time as the sum of the category counts. Otherwise, provided value will be used. Relevant for interval masking.
@@ -277,6 +278,10 @@ mask_vector <- function(input_vector,
 #' @param tableout Table 1 output as outputted by the function DescriptivesTable
 #' @param threshold Numeric. Threshold below which values need to be masked, determined externally
 #' @param output_warnings Logical. Should warning be issued displaying which value combinations are not possible?
+#' @param rounding_digits Integer. Number of digits to round percentages to.
+#' @param count.names Character vector of length 2. Names of the count columns in table
+#' @param pct.names Character vector of length 2. Names of the percentage columns in table
+#' @param table_metadata Metadata table with variable names and types
 #'
 #' @returns
 #' @export
