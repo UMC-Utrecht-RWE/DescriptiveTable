@@ -20,6 +20,14 @@ mask_vector_wrapper(
 \item{threshold}{Numeric. Threshold below which values need to be masked, determined externally}
 
 \item{output_warnings}{Logical. Should warning be issued displaying which value combinations are not possible?}
+
+\item{rounding_digits}{Integer. Number of digits to round percentages to.}
+
+\item{count.names}{Character vector of length 2. Names of the count columns in table}
+
+\item{pct.names}{Character vector of length 2. Names of the percentage columns in table}
+
+\item{table_metadata}{Metadata table with variable names and types}
 }
 \description{
 Interval mask a tableout
