@@ -422,16 +422,36 @@ DescriptivesTable <- function(
             level_asd <- asd_col[!is.na(cat) & var == varname]
             cats <- unlist(output_df[(start + 1):(end + 1), "cat"])
             matched <- match(cats, level_asd$cat)
+
+            # Warn if any categories don't have calculated ASDs
             if (anyNA(matched)) {
-              stop(paste0(
-                "error in writing per-category ASD values, no match found for ",
-                "category/categories of variable ",
-                varname
+              missing_cats <- cats[is.na(matched)]
+              warning(paste0(
+                "Variable '", varname, "' has category/categories ",
+                paste(missing_cats, collapse = ", "),
+                " not present in data; ASD will be computed as 0 for these categories."
               ))
             }
-            output_df[(start + 1):(end + 1), "asd_1"] <- level_asd$asd_1[
-              matched
-            ]
+
+            # Fill per-category ASDs where available; use NA for categories without calculated ASDs
+            asd_values <- rep(NA, length(cats))
+            asd_values[!is.na(matched)] <- level_asd$asd_1[matched[!is.na(matched)]]
+
+            # For categories not matched, check if they're completely missing (all counts are 0)
+            # or present in only one group. If completely missing, set ASD to 0.
+            count_cols <- names(output_df)[grepl("^V1_", names(output_df))]
+            missing_indices <- which(is.na(matched))
+            for (idx in missing_indices) {
+              row_idx <- start + idx # actual row index in output_df
+              counts <- as.numeric(output_df[row_idx, ..count_cols])
+              # Check if all count columns are 0 for this category
+              all_zeros <- all(counts == 0, na.rm = TRUE)
+              if (all_zeros) {
+                asd_values[idx] <- 0 # Category completely missing - ASD is 0
+              }
+            }
+
+            output_df[(start + 1):(end + 1), "asd_1"] <- asd_values
           }
         } # end type==CAT if
 
