@@ -132,8 +132,8 @@ test_that("output_format = 'raw' returns the per-category ASD", {
   expect_equal(as.numeric(tab[var == "region", asd_1]), as.numeric(per_level[!is.na(cat), asd_1]))
 })
 
-test_that("missing category levels in data produce 0 counts and NA ASD with warning", {
-  # Create cohort where category "E" is in metadata but not in data
+test_that("missing category levels in data produce 0 counts and ASD=0 with warning", {
+  # Create cohort where category "3" is in metadata but not in data
   cohort_missing <- data.table(
     group = rep(groups, each = 10),
     w = c(1:10, 10:1),
@@ -167,15 +167,15 @@ test_that("missing category levels in data produce 0 counts and NA ASD with warn
     "not present in data"
   )
 
-  # Verify counts for missing category are 0
+  # Verify counts for completely missing category are 0
   smoking_rows <- tab[var == "smoking"]
   missing_cat_row <- smoking_rows[label == "3"]
   expect_equal(nrow(missing_cat_row), 1L)
   # V1_CONTROL and V1_EXPOSED should be 0 for the missing category
   expect_true(all(missing_cat_row[, grep("^V1", names(missing_cat_row), value = TRUE), with = FALSE] == 0))
 
-  # Verify ASD is NA for missing category
-  expect_true(is.na(missing_cat_row$asd_1))
+  # Verify ASD is 0 for completely missing category (not present in either group)
+  expect_equal(missing_cat_row$asd_1, 0)
 
   # Verify other categories still have their ASD values
   present_cat_rows <- smoking_rows[label != "3"]
