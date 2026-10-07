@@ -422,16 +422,21 @@ DescriptivesTable <- function(
             level_asd <- asd_col[!is.na(cat) & var == varname]
             cats <- unlist(output_df[(start + 1):(end + 1), "cat"])
             matched <- match(cats, level_asd$cat)
+
+            # Warn if any categories don't have calculated ASDs
             if (anyNA(matched)) {
-              stop(paste0(
-                "error in writing per-category ASD values, no match found for ",
-                "category/categories of variable ",
-                varname
+              missing_cats <- cats[is.na(matched)]
+              warning(paste0(
+                "Variable '", varname, "' has category/categories ",
+                paste(missing_cats, collapse = ", "),
+                " not present in data; ASD will be NA for these categories"
               ))
             }
-            output_df[(start + 1):(end + 1), "asd_1"] <- level_asd$asd_1[
-              matched
-            ]
+
+            # Fill per-category ASDs where available; use NA for categories without calculated ASDs
+            asd_values <- rep(NA, length(cats))
+            asd_values[!is.na(matched)] <- level_asd$asd_1[matched[!is.na(matched)]]
+            output_df[(start + 1):(end + 1), "asd_1"] <- asd_values
           }
         } # end type==CAT if
 
