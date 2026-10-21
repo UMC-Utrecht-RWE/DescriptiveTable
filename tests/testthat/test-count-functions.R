@@ -3,8 +3,6 @@
 #   R/DescriptivesTable.R  (weighted_stats argument)
 #
 # Run with devtools::test(), or devtools::load_all() before sourcing this file
-library(testthat)
-library(data.table)
 
 test_that("NUM1 reports SD when the variable has missing values", {
   d <- data.table::data.table(x = c(1, 2, 3, NA))
