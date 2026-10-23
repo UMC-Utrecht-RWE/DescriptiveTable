@@ -131,3 +131,83 @@ test_that("output_format = 'raw' returns the per-category ASD", {
 
   expect_equal(as.numeric(tab[var == "region", asd_1]), as.numeric(per_level[!is.na(cat), asd_1]))
 })
+
+test_that("missing category levels in data produce 0 counts and ASD=0 with warning", {
+  # Create cohort where category "3" is in metadata but not in data
+  cohort_missing <- data.table(
+    group = rep(groups, each = 10),
+    w = c(1:10, 10:1),
+    smoking = c(
+      rep(c("0", "1", "2"), times = c(4, 3, 3)),
+      rep(c("0", "1", "2"), times = c(5, 2, 3))
+    ),
+    sick = rep(c(TRUE, FALSE), 10)
+  )
+
+  metadata_missing <- data.table(
+    var = c("smoking", "sick"),
+    type = c("CAT", "TF"),
+    expectedCat = c("0, 1, 2, 3", NA),
+    label = c("Smoking Status", "Sick"),
+    parent = NA_character_,
+    parent_cat = NA_character_,
+    header = NA_character_
+  )
+
+  # Should produce a warning but not error
+  expect_warning(
+    tab <- DescriptivesTable(
+      cohort_missing,
+      metadata_missing,
+      output_format = "processed",
+      asd_per_level = TRUE,
+      control_types = FALSE,
+      output_asd = FALSE
+    ),
+    "not present in data"
+  )
+
+  # Verify counts for completely missing category are 0
+  smoking_rows <- tab[var == "smoking"]
+  missing_cat_row <- smoking_rows[label == "3"]
+  expect_equal(nrow(missing_cat_row), 1L)
+  # V1_CONTROL and V1_EXPOSED should be 0 for the missing category
+  expect_true(all(missing_cat_row[, grep("^V1", names(missing_cat_row), value = TRUE), with = FALSE] == 0))
+
+  # Verify ASD is 0 for completely missing category (not present in either group)
+  expect_equal(missing_cat_row$asd_1, 0)
+
+  # Verify other categories still have their ASD values
+  present_cat_rows <- smoking_rows[label != "3"]
+  expect_true(all(!is.na(present_cat_rows$asd_1)))
+})
+
+test_that("category present in one group but not the other produces 0 counts and NA ASD", {
+  # Create cohort where category "2" is only in CONTROL group
+  cohort_unbalanced <- data.table(
+    group = c(rep("CONTROL", 10), rep("EXPOSED", 10)),
+    w = c(1:10, 1:10),
+    smoking = c(
+      rep(c("0", "1", "2"), times = c(4, 3, 3)),
+      rep(c("0", "1"), times = c(5, 5))
+    ),
+    sick = rep(c(TRUE, FALSE), 10)
+  )
+
+  metadata_missing <- data.table(
+    var = c("smoking", "sick"),
+    type = c("CAT", "TF"),
+    expectedCat = c("0, 1, 2", NA),
+    label = c("Smoking Status", "Sick"),
+    parent = NA_character_,
+    parent_cat = NA_character_,
+    header = NA_character_
+  )
+
+  # Verify category "2" appears in output with 0 counts in EXPOSED group
+  smoking_rows <- tab[var == "smoking"]
+  cat_2_row <- smoking_rows[label == "2"]
+  expect_equal(nrow(cat_2_row), 1L)
+  # EXPOSED group should have 0 count
+  expect_equal(cat_2_row$V1_EXPOSED, 0)
+})
