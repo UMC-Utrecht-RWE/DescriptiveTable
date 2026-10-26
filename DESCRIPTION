@@ -7,7 +7,6 @@ Description: Package to create baseline descriptives tables ("table 1" in epidem
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Suggests: 
     knitr,
     dplyr,
@@ -20,3 +19,5 @@ Imports:
     stddiff,
     stringr,
     Hmisc
+URL: https://umc-utrecht-rwe.github.io/DescriptiveTable/
+Config/roxygen2/version: 8.1.0

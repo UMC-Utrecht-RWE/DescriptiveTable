@@ -8,8 +8,20 @@
 \description{
 Package to create baseline descriptives tables ("table 1" in epidemiology circles) and calculate associated statistics such as absolute standardized differences.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://umc-utrecht-rwe.github.io/DescriptiveTable/}
+}
+
+}
 \author{
 \strong{Maintainer}: Oisin Ryan \email{o.ryan@umcutrecht.nl}
+
+Authors:
+\itemize{
+  \item Oisin Ryan \email{o.ryan@umcutrecht.nl}
+}
 
 }
 \keyword{internal}
