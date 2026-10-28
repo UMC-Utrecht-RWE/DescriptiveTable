@@ -2,6 +2,7 @@
 
 ## Fixed
 
+- DescriptiveTable does not fail with control_types = TRUE when the input data has date or date-time columns (#17)
 - The SD of numeric variables is no longer blank when the variable has missing values (#28).
 
 # DescriptiveTable 0.3.1
