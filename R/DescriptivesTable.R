@@ -86,7 +86,7 @@ DescriptivesTable <- function(
   }
 
   # detected strange behaviour where compute_asd can sometimes re-write column types
-  original_types <- sapply(popdf, class)
+  original_types <- vapply(popdf, \(x) class(x)[1], character(1))
 
   group_list <- unique(popdf[[groupcol]])
 
