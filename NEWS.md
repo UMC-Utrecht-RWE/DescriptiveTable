@@ -1,5 +1,9 @@
 # DescriptiveTable (development version)
 
+## Changed
+
+- Removed project-specific example files (#35)
+
 ## Fixed
 
 - The SD of numeric variables is no longer blank when the variable has missing values (#28).
